@@ -164,6 +164,7 @@ const SearchBar = ({ search, setSearch, onSearch }) => {
                     role="combobox"
                     aria-controls="search-listbox"
                     aria-autocomplete="list"
+                    name="search"
                 />
             </div>
 
