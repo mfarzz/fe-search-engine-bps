@@ -1,9 +1,9 @@
 import PropTypes from "prop-types";
 
-const InputFile = ({label, value, onChange, placeholder, name, id}) => {
+const InputFile = ({label, onChange, placeholder, name, id}) => {
     return (
-        <div className="max-w-sm">
-            <label htmlFor="file-input" className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="max-w-lg">
+            <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor={id}>
                 {label}
             </label>
             <input 
@@ -15,7 +15,6 @@ const InputFile = ({label, value, onChange, placeholder, name, id}) => {
                     file:bg-gray-50 file:border-0
                     file:me-4
                     file:py-3 file:px-4"
-                value={value}
                 onChange={onChange} 
                     
             />
@@ -25,7 +24,6 @@ const InputFile = ({label, value, onChange, placeholder, name, id}) => {
 
 InputFile.propTypes = {
     label: PropTypes.string,
-    value: PropTypes.string,
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     name: PropTypes.string,

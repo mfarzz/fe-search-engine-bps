@@ -5,10 +5,31 @@ export const API_URL = "http://localhost:3000/";
 const axiosInstance = axios.create({
     baseURL: API_URL,
     headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     },
     withCredentials: true
 });
+
+const multipartAxiosInstance = axios.create({
+    baseURL: API_URL,
+    headers: {
+        "Content-Type": "multipart/form-data",
+    },
+    withCredentials: true
+});
+
+multipartAxiosInstance.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 axiosInstance.interceptors.request.use(
     (config) => {
@@ -49,9 +70,23 @@ export const listLink = async ({page = 1, limit =10, search = ''}) => {
     }
 }
 
+export const allUser = async ({search=''}) => {
+    try {
+        const result = await axiosInstance.get(`/all-user`,{
+            params: {
+                search,
+            },
+        });
+        return result.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
 export const tambahLink = async (data) => {
     try {
-        const result = await axiosInstance.post(`/add-link`, data);
+        const result = await multipartAxiosInstance.post(`/add-link`,(data));
         return result.data;
     } catch (error) {
         console.error(error);

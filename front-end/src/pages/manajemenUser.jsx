@@ -17,7 +17,7 @@ const ManajemenUser = () => {
         currentPage: 1,
         totalPages: 1,
         totalResults: 0,
-        limit: 10
+        limit: 5
     });
     const [search, setSearch] = useState("");
 
@@ -72,10 +72,10 @@ const ManajemenUser = () => {
             if (result.isConfirmed) {
                 try {
                     await hapusUser(id);
-                    Swal.fire("Terhapus!", "Data berhasil dihapus.", "success");
-                    setUsers((prevUsers) =>
-                        prevUsers.filter((item) => item.id !== id)
-                    );
+                    Swal.fire("Terhapus!", "Data berhasil dihapus.", "success")
+                        .then(() => {
+                            window.location.reload();
+                        });
                 } catch (error) {
                     Swal.fire("Error!", "Gagal menghapus data.", "error");
                     throw error;
@@ -132,7 +132,9 @@ const ManajemenUser = () => {
                                                         </div>
                                                     </td>
                                                     <td className="w-40 px-6 py-4 text-center text-gray-800">
-                                                        {user.email}
+                                                        <div className="truncate">
+                                                            <HighlightText text={user.email} highlight={search} />
+                                                        </div>
                                                     </td>
                                                     <td className="w-32 px-6 py-4">
                                                         <div className="flex justify-center items-center gap-4">

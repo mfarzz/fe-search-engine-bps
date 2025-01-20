@@ -1,51 +1,46 @@
+import { useState, useEffect, useCallback } from "react";
+import { Trash2, Pencil, Plus } from "lucide-react";
+import Swal from "sweetalert2";
 import Sidebar from "../components/SideBar";
 import Navbar from "../components/Navbar";
-import useRole from "../hooks/useRole";
-import { useState, useEffect, useCallback } from "react";
-import { Trash2, Pencil, Plus, X } from "lucide-react";
 import ButtonGreen from "../components/Button";
 import SearchBox from "../components/SearchBox";
-import Select from "../components/Select";
-import Visibility from "../components/Visibility";
-import InputFile from "../components/inputFile";
-import InputLight from "../components/inputLight";
 import Footer from "../components/Footer";
-import { API_URL, listLink, tambahLink, hapusLink, editLink } from "../services/manajemenLink.service";
+import { API_URL, listLink, tambahLink, hapusLink, editLink, allUser } from "../services/manajemenLink.service";
 import HighlightText from "../components/HighlightText";
 import ExpandableText from "../components/ExpandableText";
 import Pagination from "../components/Pagination";
-import Swal from "sweetalert2";
-
-const visibilitasOptions = ["Publik", "Private"];
+import ManajemenLinkPopup from "../components/ManajemenLinkPopup";
+import useRole from "../hooks/useRole";
 
 const ManajemenLink = () => {
     const role = useRole();
     const [isOpen, setIsOpen] = useState(false);
-    const [isVisibilityPopupVisible, setIsVisibilityPopupVisible] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [links, setLinks] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState(null);
+    const [selectedUsers, setSelectedUsers] = useState([]);
     const [pageInfo, setPageInfo] = useState({
         currentPage: 1,
         totalPages: 1,
         totalResults: 0,
-        limit: 2
+        limit: 5
     });
     const [search, setSearch] = useState("");
     const [formData, setFormData] = useState({
         id: "",
         judul: "",
         url: "",
-        file: null,
         deskripsi: "",
+        file: null,
         gambar: "",
-        visibilitas: "Publik",
+        visibilitas: "public",
     });
 
     const fetchLinks = useCallback(async () => {
-        setLoading(true);
-        setError(null);
+        setIsLoading(true);
+        setErrorMessage(null);
         try {
             const response = await listLink({
                 page: pageInfo.currentPage,
@@ -58,10 +53,14 @@ const ManajemenLink = () => {
                 ...response.pagination
             }));
         } catch (err) {
-            setError("Gagal memuat data.");
-            throw err;
+            setErrorMessage("Gagal memuat data. Silakan coba lagi nanti.");
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Gagal memuat data. Silakan coba lagi nanti.",
+            });
         } finally {
-            setLoading(false);
+            setIsLoading(false);
         }
     }, [pageInfo.currentPage, pageInfo.limit, search]);
 
@@ -98,10 +97,10 @@ const ManajemenLink = () => {
             if (result.isConfirmed) {
                 try {
                     await hapusLink(id);
-                    Swal.fire("Terhapus!", "Data berhasil dihapus.", "success");
-                    setLinks((prevWebsites) =>
-                        prevWebsites.filter((item) => item.id !== id)
-                    );
+                    Swal.fire("Terhapus!", "Data berhasil dihapus.", "success")
+                        .then(() => {
+                            window.location.reload();
+                        });
                 } catch (error) {
                     Swal.fire("Error!", "Gagal menghapus data.", "error");
                 }
@@ -120,22 +119,37 @@ const ManajemenLink = () => {
             form.append("judul", formData.judul);
             form.append("url", formData.url);
             form.append("deskripsi", formData.deskripsi || "");
+            form.append("visibilitas", formData.visibilitas);
+            form.append("sharedWith[]", "");
 
-            // Handle file upload
             if (formData.file instanceof File) {
-                form.append("gambar", formData.file); // Ensure the file is appended
-            }
-            let response;
-            if (isEditing) {
-                response = await editLink(formData.id, form);
-            } else {
-                response = await tambahLink(form);
+                // Pastikan field name sesuai dengan yang diexpect multer
+                form.append("gambar", formData.file, formData.file.name);  // Tambahkan nama file
             }
 
+            const response = isEditing
+                ? await editLink(formData.id, form)
+                : await tambahLink(form);
+
+            if (response) {
+                Swal.fire({
+                    icon: "success",
+                    title: isEditing ? "Link berhasil diperbarui!" : "Link berhasil ditambahkan!",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                togglePopup();
+                fetchLinks();
+            }
         } catch (error) {
-
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Terjadi kesalahan saat menyimpan data!"
+            });
         }
-    }
+    };
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -148,27 +162,10 @@ const ManajemenLink = () => {
     const handleFileChange = (e) => {
         const file = e.target.files?.[0];
         if (file) {
-            // Validate file type
-            const allowedTypes = ["image/jpeg", "image/png", "image/gif"];
-            if (!allowedTypes.includes(file.type)) {
-                Swal.fire(
-                    "Error!",
-                    "File harus berupa gambar (JPG, PNG, atau GIF).",
-                    "error"
-                );
-                return;
-            }
-
-            const maxSize = 5 * 1024 * 1024;
-            if (file.size > maxSize) {
-                Swal.fire("Error!", "Ukuran file tidak boleh lebih dari 5MB.", "error");
-                return;
-            }
-
-            setFormData((prev) => ({
+            setFormData(prev => ({
                 ...prev,
                 file: file,
-                gambar: URL.createObjectURL(file),
+                gambar: URL.createObjectURL(file)
             }));
         }
     };
@@ -177,31 +174,107 @@ const ManajemenLink = () => {
     const togglePopup = () => {
         setIsOpen(!isOpen);
         setIsEditing(false);
+        setSelectedUsers([]); // Reset selected users
         setFormData({
             id: "",
             judul: "",
             url: "",
-            file: null,
             deskripsi: "",
+            file: null,
             gambar: "",
-            visibilitas: "Publik",
+            visibilitas: "public",
         });
     };
+
+    const handleEdit = (website) => {
+        setIsEditing(true);
+
+        // Set selected users dari data sharedWith
+        if (website.visibilitas.toLowerCase() === 'private' && website.sharedWith) {
+            // Kita perlu mendapatkan ID user yang terkait melalui all-user endpoint
+            const userEmails = website.sharedWith.map(share => share.user.email);
+
+            // Gunakan allUser untuk mendapatkan ID berdasarkan email
+            allUser({ search: '' }).then(response => {
+                const users = response.data;
+                const selectedUserIds = users
+                    .filter(user => userEmails.includes(user.email))
+                    .map(user => user.id);
+                setSelectedUsers(selectedUserIds);
+            });
+        } else {
+            setSelectedUsers([]);
+        }
+
+        setFormData({
+            id: website.id,
+            judul: website.judul,
+            url: website.url,
+            deskripsi: website.deskripsi || "",
+            file: null,
+            gambar: website.gambar ? `${API_URL}${website.gambar}` : "",
+            visibilitas: website.visibilitas.toLowerCase(),
+        });
+        setIsOpen(true);
+    };
+
+    const handleSaveWithUsers = async (selectedUsers) => {
+        try {
+            if (!formData.judul || !formData.url) {
+                Swal.fire("Error!", "Judul dan URL harus diisi.", "error");
+                return;
+            }
+
+            const form = new FormData();
+            form.append("judul", formData.judul);
+            form.append("url", formData.url);
+            form.append("deskripsi", formData.deskripsi || "");
+            form.append("visibilitas", formData.visibilitas);
+            // Append selectedUsers jika visibility private
+            selectedUsers.forEach(userId => {
+                form.append("sharedWith[]", userId);
+            })
+
+            if (formData.file instanceof File) {
+                form.append("gambar", formData.file, formData.file.name);
+            }
+
+            const response = isEditing
+                ? await editLink(formData.id, form)
+                : await tambahLink(form);
+
+            if (response) {
+                Swal.fire({
+                    icon: "success",
+                    title: isEditing ? "Link berhasil diperbarui!" : "Link berhasil ditambahkan!",
+                    showConfirmButton: false,
+                    timer: 1500
+                });
+                togglePopup();
+                fetchLinks();
+            }
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Oops...",
+                text: "Terjadi kesalahan saat menyimpan data!"
+            });
+        }
+    };
+
+
 
     return (
         <div className="flex flex-col min-h-screen">
             <Navbar />
             <div className="flex flex-grow bg-white-100 mt-20">
-                {/* Main content container with min-width to prevent shrinking */}
-                <div className="flex-grow min-w-[1400px] bg-white mt-1 p-4 mb-3 rounded-lg">
-                    {/* Fixed width content wrapper */}
+                <div className="flex-grow min-w-[1400px] bg-white mt-1 p-4 mb-[6.2rem] rounded-lg">
                     <div className="w-[1200px] mx-auto">
-                        {/* Table container with shadow and fixed width */}
                         <div className="bg-white shadow rounded-lg">
                             <div className="p-4">
                                 {/* Header section */}
                                 <div className="mb-8 flex justify-between items-center">
-                                    <div className="text-xl font-semibold text-gray-700">
+                                    <div className="teFxt-xl font-semibold text-gray-700">
                                         List Link
                                     </div>
                                     <div className="w-72">
@@ -210,230 +283,179 @@ const ManajemenLink = () => {
                                             onChange={handleSearch}
                                         />
                                     </div>
-                                    <ButtonGreen onClick={togglePopup} variant="green" label="Tambah Link" name="tambah-link">
+                                    <ButtonGreen
+                                        onClick={togglePopup}
+                                        variant="green"
+                                        label="Tambah Link"
+                                        name="tambah-link"
+                                        disabled={isLoading}
+                                    >
                                         <Plus className="font-medium" size={15} />
                                     </ButtonGreen>
                                 </div>
 
-                                {/* Table with fixed layout */}
-                                <div className="overflow-hidden">
-                                    <table className="w-full table-fixed border-collapse">
-                                        <thead>
-                                            <tr className="bg-blue-premier">
-                                                <th className="w-36 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    Judul
-                                                </th>
-                                                <th className="w-64 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    URL
-                                                </th>
-                                                <th className="w-72 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    Deskripsi
-                                                </th>
-                                                <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    Visibilitas
-                                                </th>
-                                                <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    File
-                                                </th>
-                                                <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                    Aksi
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-gray-200">
-                                            {links.map((website, index) => (
-                                                <tr key={index} className="hover:bg-gray-100">
-                                                    <td className="w-48 px-6 py-4 text-center text-gray-800">
-                                                        <div className="truncate">
-                                                            <HighlightText text={website.judul} highlight={search} />
-                                                        </div>
-                                                    </td>
-                                                    <td className="w-64 px-6 py-4 text-center text-gray-800">
-                                                        <div className="truncate">
-                                                            <a
-                                                                href={website.url}
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                                className="text-blue-500 underline hover:text-blue-700"
-                                                            >
-                                                                {website.url}
-                                                            </a>
-                                                        </div>
-                                                    </td>
-                                                    <td className="w-64 px-6 py-4 text-gray-800">
-                                                        <div className="w-full">
-                                                            <ExpandableText text={website.deskripsi} maxLength={50} />
-                                                        </div>
-                                                    </td>
-                                                    <td className="w-32 px-6 py-4 text-center text-gray-800">
-                                                        {website.visibilitas}
-                                                    </td>
-                                                    <td className="w-32 px-6 py-4">
-                                                        <div className="flex justify-center items-center">
-                                                            {website.gambar ? (
-                                                                <div className="w-16 h-16 overflow-hidden flex-shrink-0">
-                                                                    <img
-                                                                        src={`${API_URL}${website.gambar}`}
-                                                                        alt={website.judul}
-                                                                        className="w-16 h-16 object-cover"
-                                                                    />
-                                                                </div>
-                                                            ) : (
-                                                                <span className="text-gray-500">
-                                                                    Tidak ada gambar
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="w-32 px-6 py-4">
-                                                        <div className="flex justify-center items-center gap-4">
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDelete(website.id, website.url)}
-                                                                className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
-                                                            >
-                                                                <Trash2
-                                                                    size={20}
-                                                                    color="red"
-                                                                    className="rounded transition-transform duration-300 transform hover:-translate-y-1"
-                                                                />
-                                                            </button>
-                                                            <button
-                                                                type="button"
-                                                                className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
-                                                            >
-                                                                <Pencil
-                                                                    size={20}
-                                                                    color="orange"
-                                                                    className="rounded transition-transform duration-300 transform hover:-translate-y-1"
-                                                                />
-                                                            </button>
-                                                        </div>
-                                                    </td>
+                                {/* Error Message */}
+                                {errorMessage && (
+                                    <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
+                                        {errorMessage}
+                                    </div>
+                                )}
+
+                                {/* Loading State */}
+                                {isLoading ? (
+                                    <div className="flex justify-center items-center py-8">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                                    </div>
+                                ) : (
+                                    <div className="overflow-hidden">
+                                        <table className="w-full table-fixed border-collapse">
+                                            <thead>
+                                                <tr className="bg-blue-premier">
+                                                    <th className="w-36 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        Judul
+                                                    </th>
+                                                    <th className="w-64 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        URL
+                                                    </th>
+                                                    <th className="w-72 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        Deskripsi
+                                                    </th>
+                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        Visibilitas
+                                                    </th>
+                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        File
+                                                    </th>
+                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
+                                                        Aksi
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-200">
+                                                {links.map((website, index) => (
+                                                    <tr key={index} className="hover:bg-gray-100">
+                                                        <td className="w-48 px-6 py-4 text-center text-gray-800">
+                                                            <div className="truncate">
+                                                                <HighlightText text={website.judul} highlight={search} />
+                                                            </div>
+                                                        </td>
+                                                        <td className="w-64 px-6 py-4 text-center text-gray-800">
+                                                            <div className="truncate">
+                                                                <a
+                                                                    href={website.url}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="text-blue-500 underline hover:text-blue-700"
+                                                                >
+                                                                    {website.url}
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                        <td className="w-64 px-6 py-4 text-gray-800">
+                                                            <div className="w-full">
+                                                                <ExpandableText text={website.deskripsi} maxLength={50} />
+                                                            </div>
+                                                        </td>
+                                                        <td className="w-32 px-6 py-4 text-center text-gray-800">
+                                                            {website.visibilitas}
+                                                        </td>
+                                                        <td className="w-32 px-6 py-4">
+                                                            <div className="flex justify-center items-center">
+                                                                {website.gambar ? (
+                                                                    <div className="w-16 h-16 overflow-hidden flex-shrink-0">
+                                                                        <img
+                                                                            src={`${API_URL}${website.gambar}`}
+                                                                            alt={website.judul}
+                                                                            className="w-16 h-16 object-cover"
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <span className="text-gray-500">
+                                                                        Tidak ada gambar
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="w-32 px-6 py-4">
+                                                            <div className="flex justify-center items-center gap-4">
+                                                                <button
+                                                                    type="button"
+                                                                    name="hapus-link"
+                                                                    onClick={() => handleDelete(website.id, website.url)}
+                                                                    className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
+                                                                >
+                                                                    <Trash2
+                                                                        size={20}
+                                                                        color="red"
+                                                                        className="rounded transition-transform duration-300 transform hover:-translate-y-1"
+                                                                    />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    name="edit-link"
+                                                                    onClick={() => handleEdit(website)}
+                                                                    className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
+                                                                >
+                                                                    <Pencil
+                                                                        size={20}
+                                                                        color="orange"
+                                                                        className="rounded transition-transform duration-300 transform hover:-translate-y-1"
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {!isLoading && (
+                            <div className="sticky bottom-0 bg-white mt-4 pb-4">
+                                <div className="flex justify-end">
+                                    <div className="w-auto">
+                                        <Pagination
+                                            currentPage={pageInfo.currentPage}
+                                            totalPages={pageInfo.totalPages}
+                                            onPageChange={handlePageChange}
+                                        />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        )}
 
-                        {/* Pagination with fixed position */}
-                        <div className="mt-4 flex justify-end">
-                            <div className="w-auto">
-                                <Pagination
-                                    currentPage={pageInfo.currentPage}
-                                    totalPages={pageInfo.totalPages}
-                                    onPageChange={handlePageChange}
-                                />
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <Sidebar role={role} />
             </div>
+
+            {/* Footer */}
             <div className="fixed bottom-0 w-full min-w-[1400px] bg-white">
                 <div className="w-[1200px] mx-auto">
                     <Footer />
                 </div>
             </div>
 
-
+            {/* Popup */}
             {isOpen && (
-                <>
-                    <div
-                        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity z-40"
-                        onClick={togglePopup}
-                        aria-hidden="true"
-                    />
-                    <div className="fixed inset-0 flex justify-center items-center z-50">
-                        <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
-                            <div className="flex justify-between items-center border-b p-4">
-                                <h2 className="text-lg font-semibold text-gray-800">
-                                    {isEditing ? "Edit Link" : "Tambah Link"}
-                                </h2>
-                                <button
-                                    onClick={togglePopup}
-                                    className="text-gray-500 hover:text-gray-800"
-                                >
-                                    <X />
-                                </button>
-                            </div>
-                            <div className="pl-4 pt-4 pb-4 pr-4 ml-4 mr-4">
-                                <InputLight
-                                    label="Judul"
-                                    name="judul"
-                                    value={formData.judul}
-                                    placeholder="Masukkan Nama"
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <InputLight
-                                    label="URL"
-                                    name="url"
-                                    value={formData.url}
-                                    placeholder="Masukkan URL"
-                                    onChange={handleChange}
-                                    required
-                                />
-                                <InputLight
-                                    label="Deskripsi"
-                                    name="deskripsi"
-                                    value={formData.deskripsi}
-                                    placeholder="Masukkan Deskripsi"
-                                    onChange={handleChange}
-                                />
-                                <InputFile
-                                    label="Gambar"
-                                    name="gambar"
-                                    value={formData.gambar}
-                                    onChange={handleFileChange}
-                                    accept="image/*"
-                                />
-                                <div className="mt-2">
-                                    <Select
-                                        name="visibilitas"
-                                        label="Visibilitas"
-                                        options={visibilitasOptions}
-                                        value={formData.visibilitas}
-                                        onChange={(e) => {
-                                            handleChange(e);
-                                            if (e.target.value === "Dibatasi") {
-                                                setIsVisibilityPopupVisible(true);
-                                            } else {
-                                                setIsVisibilityPopupVisible(false);
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                {isVisibilityPopupVisible && (
-                                    <Visibility
-                                        onClick={() => setIsVisibilityPopupVisible(false)}
-                                    />
-                                )}
-
-                                <div className="mt-6 flex justify-center space-x-2">
-                                    <ButtonGreen onClick={handleSave}>
-                                        {isEditing ? "Update" : "Simpan"}
-                                    </ButtonGreen>
-
-                                    <ButtonGreen
-                                        label={"Batal"}
-                                        variant="red"
-                                        onClick={togglePopup} >
-
-                                    </ButtonGreen>
-
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </>
+                <ManajemenLinkPopup
+                    isOpen={isOpen}
+                    togglePopup={togglePopup}
+                    isEditing={isEditing}
+                    formData={formData}
+                    handleChange={handleChange}
+                    handleFileChange={handleFileChange}
+                    handleSave={handleSave}
+                    onSaveWithUsers={handleSaveWithUsers}
+                    initialSelectedUsers={selectedUsers}
+                    isLoading={isLoading}
+                />
             )}
         </div>
     );
+
 };
 
 export default ManajemenLink;

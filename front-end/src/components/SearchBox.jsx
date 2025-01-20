@@ -22,6 +22,7 @@ const SearchBox = ({placeholder, value, onChange}) => {
                 {/* Input Pencarian */}
                 <input
                     type="text"
+                    name="search"
                     className="block w-full py-2 pl-10 pr-4 text-sm border rounded-lg focus:ring-blue-500 focus:border-blue-500 border-gray-100 dark:bg-white dark:border-gray-700 dark:text-black-300 dark:placeholder-black-500"
                     placeholder={placeholder}
                     value={value}

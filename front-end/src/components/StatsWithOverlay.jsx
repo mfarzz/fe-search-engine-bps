@@ -22,7 +22,7 @@ const StatsWithOverlay = ({ label, jumlah, ikon: Ikon, keterangan }) => {
 
 StatsWithOverlay.propTypes = {
     label: PropTypes.string,
-    jumlah: PropTypes.number,
+    jumlah: PropTypes.string,
     ikon: PropTypes.elementType,
     keterangan: PropTypes.string,
 };

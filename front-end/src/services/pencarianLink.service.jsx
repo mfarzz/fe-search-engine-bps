@@ -33,9 +33,10 @@ export const getKueri = async () => {
     }
 }
 
-export const cariLink = async (query) => {
+export const cariLink = async ({query, page = 1, limit = 10}) => {
     try {
-        const result = await axiosInstance.get(`/search-link?q=${query}`, {});
+        const result = await axiosInstance.get(`/search-link?q=${query}&page=${page}&limit=${limit}`, {});
+        console.log(query);
         return result.data;
     } catch (error) {
         console.error(error);
@@ -59,3 +60,22 @@ export const klikLink = async (linkId) => {
     }
 }
 
+export const exploreLink = async (limit = 10, offset = 0) => {
+    try {
+        const result = await axiosInstance.get('/explore-link', {
+            params: {
+                limit: Math.max(1, parseInt(limit)),
+                offset: Math.max(0, parseInt(offset))
+            }
+        });
+        
+        return {
+            status: result.data.status,
+            data: result.data.data,
+            hasMore: result.data.hasMore
+        };
+    } catch (error) {
+        console.error('Error in exploreLink service:', error);
+        throw error;
+    }
+}
