@@ -106,7 +106,7 @@ export const hapusLink = async (id) => {
 
 export const editLink = async (id, data) => {
     try {
-        const result = await axiosInstance.put(`/edit-link/${id}`, data);
+        const result = await multipartAxiosInstance.put(`/edit-link/${id}`, data);
         return result.data;
     } catch (error) {
         console.error(error);
