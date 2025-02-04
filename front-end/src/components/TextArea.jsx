@@ -1,10 +1,11 @@
 import PropTypes from "prop-types";
 
-const TextArea = ({ label, value, onChange, placeholder, name, id  }) => {
+const TextArea = ({ label, value, onChange, placeholder, name, id, className }) => {
   return (
-    <div className="max-w-sm">
+    <div className="w-full">
       <label
-        htmlFor="textarea-label" className="block text-sm font-medium mb-2"
+        htmlFor={id} 
+        className="block text-sm font-medium mb-2 text-white"
       >
         {label}
       </label>
@@ -14,8 +15,12 @@ const TextArea = ({ label, value, onChange, placeholder, name, id  }) => {
         placeholder={placeholder}
         value={value}
         onChange={onChange}
-        className="py-3 px-4 block w-full border border-gray-300 rounded-lg text-sm focus:border-green focus:ring-green disabled:opacity-50 disabled:pointer-events-none" rows="3" 
-        
+        className={`py-3 px-4 block w-full border-gray-300 rounded-lg text-sm
+          bg-white text-gray-900 placeholder-gray-500
+          focus:border-green focus:ring-green
+          disabled:opacity-50 disabled:pointer-events-none
+          ${className}`}
+        rows="4"
       ></textarea>
     </div>
   );
@@ -28,6 +33,7 @@ TextArea.propTypes = {
   placeholder: PropTypes.string,
   name: PropTypes.string,
   id: PropTypes.string,
+  className: PropTypes.string,
 };
 
 export default TextArea;

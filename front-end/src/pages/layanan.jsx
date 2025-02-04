@@ -5,6 +5,86 @@ import Sidebar from "../components/SideBar";
 import Footer from "../components/Footer";
 import ScrollButton from "../components/ScrollButton";
 import useRole from "../hooks/useRole";
+import { motion, AnimatePresence } from "framer-motion";
+import Logo from "../components/Logo";
+import Feedback from "../components/Feedback";
+
+const AnimatedBackground = () => {
+    const [nodes, setNodes] = useState([]);
+
+    useEffect(() => {
+        const createNode = () => ({
+            x: Math.random() * window.innerWidth,
+            y: Math.random() * window.innerHeight,
+            vx: (Math.random() - 0.5) * 1,
+            vy: (Math.random() - 0.5) * 1,
+            size: Math.random() * 3 + 2,
+        });
+
+        setNodes(Array.from({ length: 25 }, createNode));
+
+        const animate = () => {
+            setNodes(prevNodes =>
+                prevNodes.map(node => ({
+                    ...node,
+                    x: (node.x + node.vx + window.innerWidth) % window.innerWidth,
+                    y: (node.y + node.vy + window.innerHeight) % window.innerHeight,
+                }))
+            );
+        };
+
+        const interval = setInterval(animate, 50);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="fixed inset-0 bg-gradient-to-br from-blue-950 via-indigo-900 to-blue-900">
+            <svg className="absolute inset-0 w-full h-full">
+                {nodes.map((node, i) => (
+                    <g key={i}>
+                        {nodes.map((otherNode, j) => {
+                            const distance = Math.hypot(node.x - otherNode.x, node.y - otherNode.y);
+                            if (distance < 150 && i < j) {
+                                return (
+                                    <line
+                                        key={`${i}-${j}`}
+                                        x1={node.x}
+                                        y1={node.y}
+                                        x2={otherNode.x}
+                                        y2={otherNode.y}
+                                        stroke="rgba(255,255,255,0.1)"
+                                        strokeWidth="1"
+                                    />
+                                );
+                            }
+                            return null;
+                        })}
+                        <circle
+                            cx={node.x}
+                            cy={node.y}
+                            r={node.size}
+                            fill="rgba(255,255,255,0.3)"
+                        />
+                    </g>
+                ))}
+            </svg>
+        </div>
+    );
+};
+
+const CategoryButton = ({ category, isSelected, onClick }) => (
+    <motion.button
+        onClick={() => onClick(category)}
+        className={`px-6 py-2 rounded-full text-sm font-medium transition-all duration-300
+                   ${isSelected
+                ? 'bg-cyan-400/20 text-cyan-200 ring-2 ring-cyan-400/50'
+                : 'bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'}`}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+    >
+        {category}
+    </motion.button>
+);
 
 const Layanan = () => {
     const role = useRole();
@@ -12,26 +92,14 @@ const Layanan = () => {
     const [offset, setOffset] = useState(0);
     const [hasMore, setHasMore] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
-    const [isVisible, setIsVisible] = useState(false);
-    const [animatedCards, setAnimatedCards] = useState([]);
     const limit = 12;
-
-    useEffect(() => {
-        setIsVisible(true);
-    }, []);
-
-    useEffect(() => {
-        const timeout = setTimeout(() => {
-            setAnimatedCards(cards.map((_, index) => index));
-        }, 100);
-
-        return () => clearTimeout(timeout);
-    }, [cards]);
+    const [selectedCategory, setSelectedCategory] = useState("");
+    const categories = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
 
     const fetchCards = async (currentOffset = 0) => {
         try {
             setIsLoading(true);
-            const response = await exploreLink(limit, currentOffset);
+            const response = await exploreLink(limit, currentOffset, selectedCategory);
 
             if (currentOffset === 0) {
                 setCards(response.data);
@@ -48,8 +116,13 @@ const Layanan = () => {
     };
 
     useEffect(() => {
-        fetchCards();
-    }, []);
+        setOffset(0);
+        fetchCards(0);
+    }, [selectedCategory]);
+
+    const handleCategoryClick = (category) => {
+        setSelectedCategory(selectedCategory === category ? "" : category);
+    };
 
     const handleScroll = useCallback(() => {
         const scrollHeight = document.documentElement.scrollHeight;
@@ -61,97 +134,112 @@ const Layanan = () => {
             setOffset(newOffset);
             fetchCards(newOffset);
         }
-    }, [offset, isLoading, hasMore, limit]);
+    }, [offset, isLoading, hasMore]);
 
     useEffect(() => {
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
     }, [handleScroll]);
 
+    const cardVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.5 }
+        }
+    };
+
     return (
-        <div className="relative min-h-screen flex flex-col overflow-hidden">
-            {/* Animated background */}
-            <div className="fixed inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 animate-gradient-slow"></div>
-                <div className="absolute inset-0 opacity-30">
-                    <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-                    <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-                    <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-                </div>
-            </div>
+        <div className="relative min-h-screen flex flex-col">
+            <AnimatedBackground />
 
-            <div className="container mx-auto p-6 flex-grow relative z-10">
-                <h1 
-                    className={`text-3xl font-bold mb-8 transform transition-all duration-1000 ease-out
-                        ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}
+            <motion.div
+                className="container mx-auto p-6 flex-grow relative z-10"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                {/* Logo Section */}
+                <div className="flex flex-col items-center mb-3">
+                    <Logo size="large" />
+                </div>
+
+                {/* Category Filter Section */}
+                <motion.div
+                    className="mb-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
                 >
-                    <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        Projects Gallery
-                    </span>
-                </h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {cards.map((card, index) => (
-                        <div
-                            key={card.id}
-                            className={`transform transition-all duration-700 ease-out backdrop-blur-sm bg-white/30 rounded-lg
-                                ${animatedCards.includes(index) 
-                                    ? 'translate-y-0 opacity-100' 
-                                    : 'translate-y-8 opacity-0'}`}
-                            style={{
-                                transitionDelay: `${index * 100}ms`
-                            }}
-                        >
-                            <CardLayanan
-                                id={card.id}
-                                judul={card.judul}
-                                gambar={card.gambar}
-                                link={card.url}
-                                deskripsi={card.deskripsi}
-                                email={card.User.email}
-                                updatedAt={new Date(card.updatedAt).toLocaleString()}
+                    <div className="flex flex-wrap justify-center gap-4 px-4">
+                        {categories.map((category) => (
+                            <CategoryButton
+                                key={category}
+                                category={category}
+                                isSelected={selectedCategory === category}
+                                onClick={handleCategoryClick}
                             />
-                        </div>
-                    ))}
-                </div>
-                {isLoading && (
-                    <div className="text-center py-4">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
+                        ))}
                     </div>
-                )}
-            </div>
+                </motion.div>
 
-            <div className="w-full relative z-10">
+                {/* Projects Section */}
+                <motion.div
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                        visible: {
+                            transition: {
+                                staggerChildren: 0.1
+                            }
+                        }
+                    }}
+                >
+                    <AnimatePresence mode="popLayout">
+                        {cards.map((card) => (
+                            <motion.div
+                                key={card.id}
+                                layout
+                                variants={cardVariants}
+                                className="backdrop-blur-md bg-white/5 rounded-xl
+                                         hover:bg-white/20 transition-colors duration-300"
+                            >
+                                <CardLayanan
+                                    id={card.id}
+                                    judul={card.judul}
+                                    gambar={card.gambar}
+                                    link={card.url}
+                                    deskripsi={card.deskripsi}
+                                    email={card.User.email}
+                                    updatedAt={new Date(card.updatedAt).toLocaleString()}
+                                    kategori={card.kategori}
+                                />
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </motion.div>
+
+                {isLoading && (
+                    <motion.div
+                        className="flex justify-center py-8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        <div className="w-10 h-10 border-4 border-cyan-300 border-t-transparent
+                                      rounded-full animate-spin" />
+                    </motion.div>
+                )}
+            </motion.div>
+
+            <div className="relative z-10">
                 <Footer />
                 <Sidebar role={role} />
+                <ScrollButton />
+                <Feedback />
             </div>
-            <ScrollButton />
-
-            <style>{`
-                @keyframes gradient {
-                    0% { background-position: 0% 50%; }
-                    50% { background-position: 100% 50%; }
-                    100% { background-position: 0% 50%; }
-                }
-                @keyframes blob {
-                    0% { transform: translate(0px, 0px) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
-                    100% { transform: translate(0px, 0px) scale(1); }
-                }
-                .animate-gradient-slow {
-                    animation: gradient 15s ease infinite;
-                    background-size: 400% 400%;
-                }
-                .animate-blob {
-                    animation: blob 7s infinite;
-                }
-                .animation-delay-2000 {
-                    animation-delay: 2s;
-                }
-                .animation-delay-4000 {
-                    animation-delay: 4s;
-                }
-            `}</style>
         </div>
     );
 }

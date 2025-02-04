@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { API_URL, klikLink } from '../services/pencarianLink.service';
+import { motion } from 'framer-motion';
 
-const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt }) => {
+const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kategori }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const [isHovered, setIsHovered] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 640);
+        };
+
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         if (isTransitioning) {
@@ -16,18 +27,18 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt }) =
         }
     }, [isTransitioning]);
 
-    const handleToggle = () => {
+    const handleToggle = (e) => {
+        if (isMobile) return;
+        e.stopPropagation();
         setIsTransitioning(true);
         setIsExpanded(!isExpanded);
     };
 
     const handleClick = async (e) => {
         if (e.target.closest('.expand-btn')) {
-            e.preventDefault();
             return;
         }
         try {
-            e.preventDefault();
             await klikLink(id);
             window.open(link, '_blank', 'noopener,noreferrer');
         } catch (error) {
@@ -36,159 +47,142 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt }) =
         }
     };
 
-    return (
-        <div 
-            className={`group aspect-square rounded-xl overflow-hidden
-                transition-all duration-300 ease-out transform hover:-translate-y-2
-                ${isHovered ? 'shadow-2xl scale-[1.02]' : 'shadow-lg'}
-                bg-gradient-to-br from-white/90 to-white/80
-                border border-white/20`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            style={{ display: 'flex', flexDirection: 'column' }}
-        >
-            {/* Image Container */}
-            <div 
-                className={`relative transition-all duration-500 ease-in-out 
-                    ${isExpanded ? 'h-0' : 'h-2/5'}`}
+    const CategoryBadge = ({ kategori }) => (
+        <span className="px-2 py-1 text-xs font-medium rounded-full bg-cyan-400/20 text-cyan-200 
+                       ring-1 ring-cyan-400/30 backdrop-blur-sm">
+            {kategori || 'Uncategorized'}
+        </span>
+    );
+
+    if (isMobile) {
+        return (
+            <motion.div 
+                onClick={handleClick}
+                className="aspect-[4/3] rounded-xl backdrop-blur-md bg-opacity-10
+                         transition-all duration-300 overflow-hidden cursor-pointer
+                         flex flex-col relative"
             >
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10" />
+                {/* Category Badge - Absolute positioned on image */}
+                <div className="absolute top-3 left-3 z-10">
+                    <CategoryBadge kategori={kategori} />
+                </div>
+
+                <div className="relative h-3/4">
+                    <img
+                        src={gambar ? `${API_URL}${gambar}` : '/default-image.jpg'}
+                        alt={judul}
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+                <div className="flex-1 p-3 flex items-center justify-between bg-opacity-10">
+                    <h3 className="text-base font-semibold text-white/90 line-clamp-1">
+                        {judul}
+                    </h3>
+                    <svg
+                        className="w-5 h-5 text-cyan-300 transform transition-transform duration-300
+                                 hover:translate-x-1 hover:-translate-y-1 flex-shrink-0 ml-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                </div>
+            </motion.div>
+        );
+    }
+
+    return (
+        <motion.div 
+            onClick={handleClick}
+            className="aspect-square rounded-xl backdrop-blur-md bg-opacity-10
+                     transition-all duration-300 overflow-hidden cursor-pointer
+                     flex flex-col"
+        >
+            <div className={`relative transition-all duration-500 ease-in-out 
+                ${isExpanded ? 'h-0' : 'h-[45%]'}`}>
+                {/* Category Badge - Absolute positioned on image */}
+                <div className="absolute top-3 left-3 z-10">
+                    <CategoryBadge kategori={kategori} />
+                </div>
                 <img
-                    src={`${API_URL}${gambar}`}
+                    src={gambar ? `${API_URL}${gambar}` : '/default-image.jpg'}
                     alt={judul}
-                    className="object-cover w-full h-full transition-all duration-500
-                        group-hover:scale-110 group-hover:rotate-1"
+                    className="w-full h-full object-cover"
                 />
             </div>
 
-            {/* Content Container */}
-            <div className="flex flex-col flex-grow relative">
-                {/* Title and Link */}
-                <div className="p-4 flex items-start justify-between">
-                    <h2 className="text-lg font-bold text-gray-800 line-clamp-1 
-                        group-hover:text-blue-600 transition-colors duration-300">
+            <div className="flex-1 p-4 flex flex-col">
+                <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-white/90 line-clamp-1">
                         {judul}
-                    </h2>
-                    {link && (
-                        <a
-                            onClick={handleClick}
-                            href={link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="relative p-2 text-blue-600 hover:text-blue-800 ml-2 flex-shrink-0
-                                transition-transform duration-300 hover:scale-110"
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="20"
-                                height="20"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="relative z-10"
-                            >
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                <polyline points="15 3 21 3 21 9" />
-                                <line x1="10" y1="14" x2="21" y2="3" />
-                            </svg>
-                        </a>
-                    )}
+                    </h3>
+                    <svg
+                        className="w-5 h-5 text-cyan-300 transform transition-transform duration-300
+                                 hover:translate-x-1 hover:-translate-y-1 flex-shrink-0 ml-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
                 </div>
 
-                {/* Description Section */}
-                <div className="relative flex-grow px-4 min-h-0">
-                    <div 
-                        className={`text-gray-600 text-sm transition-all duration-500 ease-in-out
-                            ${isExpanded ? 'flex-grow min-h-0' : 'h-16'} 
-                            ${isExpanded && !isTransitioning ? 'overflow-y-auto' : 'overflow-hidden'}`}
-                    >
-                        <div className="whitespace-pre-wrap pb-8">
-                            {deskripsi}
-                        </div>
+                <div className="relative flex-1">
+                    <div className={`text-white/70 text-sm transition-all duration-500
+                        ${isExpanded ? 'max-h-[220px] overflow-y-auto' : 'max-h-[60px] overflow-hidden'}`}>
+                        {deskripsi}
                     </div>
-
-                    {/* Gradient Overlay */}
-                    {!isExpanded && (
-                        <div className="absolute bottom-0 left-0 right-0 h-16 
-                            bg-gradient-to-t from-white via-white/80 to-transparent 
-                            pointer-events-none" />
-                    )}
-
-                    {/* Show More/Less Button */}
+                    
                     <button
                         onClick={handleToggle}
-                        className="absolute bottom-0 left-1/2 transform -translate-x-1/2 
-                            text-blue-500 hover:text-blue-700 text-sm font-medium 
-                            flex items-center gap-1 py-1 px-3 rounded-full
-                            hover:bg-blue-50 transition-colors duration-300"
+                        className="expand-btn absolute bottom-0 left-0 text-cyan-300 hover:text-cyan-200 
+                                 text-sm flex items-center gap-1 transition-colors duration-300
+                                 bg-transparent"
                     >
-                        {isExpanded ? (
-                            <>
-                                Show Less
-                                <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="m18 15-6-6-6 6"/>
-                                </svg>
-                            </>
-                        ) : (
-                            <>
-                                Show More
-                                <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    width="16" 
-                                    height="16" 
-                                    viewBox="0 0 24 24" 
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    strokeWidth="2" 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round"
-                                >
-                                    <path d="m6 9 6 6 6-6"/>
-                                </svg>
-                            </>
-                        )}
+                        {isExpanded ? 'Show Less' : 'Show More'}
+                        <svg 
+                            className="w-4 h-4"
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                        >
+                            <path 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round" 
+                                strokeWidth={2} 
+                                d={isExpanded ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
+                            />
+                        </svg>
                     </button>
                 </div>
 
-                {/* Footer */}
-                <div className="p-4 mt-auto border-t border-gray-100">
-                    <div className="w-full text-xs text-gray-500">
-                        <div className="flex flex-col space-y-1">
-                            <span className="line-clamp-1">
-                                Created by: {email}
-                            </span>
-                            <span className="line-clamp-1">
-                                Last modified: {updatedAt}
-                            </span>
-                        </div>
+                <div className="mt-3 pt-2 border-t border-white/20">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs text-white/60 truncate max-w-[150px]">
+                            {email}
+                        </span>
+                        <span className="text-xs text-white/60">
+                            {new Date(updatedAt).toLocaleDateString()}
+                        </span>
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 };
 
 CardLayanan.propTypes = {
+    id: PropTypes.string.isRequired,
     gambar: PropTypes.string,
-    judul: PropTypes.string,
-    link: PropTypes.string,
+    judul: PropTypes.string.isRequired,
+    link: PropTypes.string.isRequired,
     deskripsi: PropTypes.string,
-    email: PropTypes.string,
-    updatedAt: PropTypes.string,
-    id: PropTypes.string,
+    email: PropTypes.string.isRequired,
+    updatedAt: PropTypes.string.isRequired,
+    kategori: PropTypes.string,
 };
 
 export default CardLayanan;

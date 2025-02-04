@@ -10,35 +10,48 @@ const axiosInstance = axios.create({
     withCredentials: true
 });
 
-axiosInstance.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('token');
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
+// Instance khusus untuk upload file
+const multipartAxiosInstance = axios.create({
+    baseURL: API_URL,
+    headers: {
+        "Content-Type": "multipart/form-data"
     },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+    withCredentials: true
+});
+
+// Tambahkan interceptor untuk kedua instance
+[axiosInstance, multipartAxiosInstance].forEach(instance => {
+    instance.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+});
 
 /**
  * Fetch list of Users.
  * @param {Object} params - Parameters for fetching Users.
- * @param {number} params.page - The page number (default: 1).
- * @param {number} params.limit - The number of items per page (default: 10).
- * @param {string} params.search - Search term for filtering (default: empty string).
+ * @param {number} params.page - The page number.
+ * @param {number} params.limit - The number of items per page.
+ * @param {string} params.search - Search term for filtering nama or email.
+ * @param {string} params.unit - Filter by unit.
  * @returns {Promise<Object>} - The response data from the API.
  */
-
-export const listUser = async ({page = 1, limit =10, search = ''}) => {
+export const listUser = async ({page = 1, limit = 10, search = '', unit = ''}) => {
     try {
         const result = await axiosInstance.get(`/list-user`, {
             params: {
                 page,
                 limit,
                 search,
+                unit
             },
         });
         return result.data;
@@ -49,6 +62,68 @@ export const listUser = async ({page = 1, limit =10, search = ''}) => {
     }
 }
 
+/**
+ * Add a new user.
+ * @param {Object} userData - User data to be added.
+ * @param {string} userData.email - User's email (must be gmail).
+ * @param {string} userData.nama - User's name.
+ * @param {string} userData.unit - User's unit/department.
+ * @param {string} userData.role - User's role.
+ * @returns {Promise<Object>} - The response data from the API.
+ */
+export const tambahUser = async (userData) => {
+    try {
+        const result = await axiosInstance.post('/add-user', userData);
+        return result.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+/**
+ * Add multiple users via Excel file.
+ * @param {File} file - Excel file containing user data.
+ * @returns {Promise<Object>} - The response data from the API.
+ */
+export const tambahUserBulk = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const result = await multipartAxiosInstance.post('/add-user-bulk', formData);
+        return result.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+/**
+ * Edit existing user.
+ * @param {string} userId - ID of the user to edit.
+ * @param {Object} userData - Updated user data.
+ * @param {string} userData.email - User's email (must be gmail).
+ * @param {string} userData.nama - User's name.
+ * @param {string} userData.unit - User's unit/department.
+ * @param {string} userData.role - User's role.
+ * @returns {Promise<Object>} - The response data from the API.
+ */
+export const editUser = async (userId, userData) => {
+    try {
+        const result = await axiosInstance.put(`/edit-user/${userId}`, userData);
+        return result.data;
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+/**
+ * Delete a user.
+ * @param {string} id - ID of the user to delete.
+ * @returns {Promise<Object>} - The response data from the API.
+ */
 export const hapusUser = async (id) => {
     try {
         const result = await axiosInstance.delete(`/delete-user/${id}`);

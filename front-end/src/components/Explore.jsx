@@ -10,7 +10,7 @@ const ExploreButton = () => {
             onClick={() => navigate('/layanan')}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            className="group fixed bottom-24 left-1/2 transform -translate-x-1/2 z-20"
+            className="group relative bottom-20 left-1/2 transform -translate-x-1/2 z-20"
         >
             {/* Animated background glow effect */}
             <div className="absolute inset-0 bg-blue-500/30 rounded-full blur-xl group-hover:blur-2xl transition-all duration-500 animate-pulse" />

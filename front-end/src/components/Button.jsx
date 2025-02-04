@@ -1,22 +1,35 @@
 import PropTypes from "prop-types";
 
-const Button = ({ label, onClick, children, name, variant = 'green' }) => {
+const Button = ({ label, onClick, children, name, variant = 'cyan', className = '' }) => {
   const styles = {
-    green: 'bg-green text-white hover:bg-opacity-90',
-    red: 'bg-red-500 text-white hover:bg-red-600',
+    cyan: 'bg-cyan-500 hover:bg-cyan-600 text-white border-cyan-400/20',
+    blue: 'bg-blue-500 hover:bg-blue-600 text-white border-blue-400/20',
+    red: 'bg-red-500 hover:bg-red-600 text-white border-red-400/20',
+    green: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400/20'
   };
 
   return (
-    <div className="button">
-      <button
-        className={`py-2 px-6 inline-flex items-center gap-x-2 text-sm font-bold rounded-lg border border-transparent focus:outline-none disabled:opacity-50 disabled:pointer-events-none shadow hover:shadow-md shadow-gray-500/50 ${styles[variant]
-          }`}
-        onClick={onClick}
-        name={name}
-      >
-        {children || label}
-      </button>
-    </div>
+    <button
+      className={`
+        py-2 px-6
+        inline-flex items-center gap-x-2
+        text-sm font-semibold
+        rounded-2xl
+        h-10
+        border
+        transition-all duration-200
+        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent
+        disabled:opacity-50 disabled:pointer-events-none
+        backdrop-blur-sm
+        shadow-lg shadow-black/10
+        ${styles[variant]}
+        ${className}
+      `}
+      onClick={onClick}
+      name={name}
+    >
+      {children || label}
+    </button>
   );
 };
 
@@ -25,7 +38,8 @@ Button.propTypes = {
   onClick: PropTypes.func,
   children: PropTypes.node,
   name: PropTypes.string,
-  variant: PropTypes.oneOf(['green', 'red']),
+  variant: PropTypes.oneOf(['cyan', 'blue', 'red', 'green']),
+  className: PropTypes.string
 };
 
 export default Button;

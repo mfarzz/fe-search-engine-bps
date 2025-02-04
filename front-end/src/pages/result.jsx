@@ -10,48 +10,9 @@ import useRole from "../hooks/useRole";
 import ScrollButton from "../components/ScrollButton";
 import Pagination from "../components/Pagination";
 import PropTypes from "prop-types";
-
-// Separate styles component
-const AnimatedStyles = () => (
-    <style>
-        {`
-            @keyframes gradient {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
-            @keyframes blob {
-                0% { transform: translate(0px, 0px) scale(1); }
-                33% { transform: translate(30px, -50px) scale(1.1); }
-                66% { transform: translate(-20px, 20px) scale(0.9); }
-                100% { transform: translate(0px, 0px) scale(1); }
-            }
-            @keyframes fadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(20px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
-            .animate-gradient-slow {
-                animation: gradient 15s ease infinite;
-                background-size: 400% 400%;
-            }
-            .animate-blob {
-                animation: blob 7s infinite;
-            }
-            .animation-delay-2000 {
-                animation-delay: 2s;
-            }
-            .animation-delay-4000 {
-                animation-delay: 4s;
-            }
-        `}
-    </style>
-);
+import { motion } from "framer-motion";
+import Logo from "../components/Logo";
+import Feedback from "../components/Feedback";
 
 const Result = () => {
     const role = useRole();
@@ -60,7 +21,13 @@ const Result = () => {
         currentPage: 1,
         totalPages: 1,
         totalResults: 0,
-        limit: 5
+        limit: 5,
+        hasNextPage: false,
+        hasPrevPage: false
+    });
+    const [metadata, setMetadata] = useState({
+        searchTerms: [],
+        queryVector: {}
     });
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -81,12 +48,6 @@ const Result = () => {
     }, [location.search]);
 
     const handleSearch = () => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            alert("Silakan login terlebih dahulu.");
-            return;
-        }
-
         if (search.trim() !== "") {
             const encodedSearch = encodeURIComponent(search).replace(/%20/g, '+');
             navigate(`/search?q=${encodedSearch}`);
@@ -99,27 +60,32 @@ const Result = () => {
                 setIsLoading(true);
                 setError(null);
                 const query = getQueryParams(location.search);
+
                 if (!query) {
                     setError("Query parameter 'q' tidak ditemukan.");
-                    setIsLoading(false);
                     return;
                 }
+
                 const result = await cariLink({
                     query,
                     page: pageInfo.currentPage,
                     limit: pageInfo.limit
                 });
-                setData(result.data);
-                setPageInfo({
-                    ...pageInfo,
-                    ...result.pagination // Updated to match the new API response structure
-                });
+
+                if (result.status) {
+                    setData(result.data);
+                    setPageInfo(result.pagination);
+                    setMetadata(result.metadata);
+                } else {
+                    setError(result.message);
+                }
             } catch (err) {
-                setError(err.message || "Something went wrong");
+                setError(err.message || "Terjadi kesalahan pada server");
             } finally {
                 setIsLoading(false);
             }
         };
+
         fetchData();
     }, [location.search, pageInfo.currentPage, pageInfo.limit]);
 
@@ -137,61 +103,83 @@ const Result = () => {
     );
 
     const ErrorMessage = ({ message }) => (
-        <div className="text-center p-4 rounded-lg bg-white/80 backdrop-blur-sm shadow-lg">
-            <div className="text-red-500">Error: {message}</div>
+        <div className="text-center p-4 rounded-lg bg-white/10 backdrop-blur-md shadow-lg border border-white/20">
+            <div className="text-red-400">Error: {message}</div>
         </div>
     );
 
     const NoResults = () => (
-        <div className="text-center p-8 rounded-lg bg-white/80 backdrop-blur-sm shadow-lg">
+        <div className="text-center p-8 rounded-lg bg-white/10 backdrop-blur-md shadow-lg border border-white/20">
             <div className="text-6xl mb-4">🔍</div>
-            <div className="text-xl text-gray-600 mb-2">No results found</div>
-            <div className="text-gray-500">Try different keywords or refine your search</div>
+            <div className="text-xl text-white/80 mb-2">
+                {metadata.searchTerms.length > 0 ? (
+                    <>
+                        <div>No results found for search terms:</div>
+                        <div className="text-sm text-white/60 mt-2">
+                            {metadata.searchTerms.join(', ')}
+                        </div>
+                    </>
+                ) : (
+                    'No results found'
+                )}
+            </div>
+            <div className="text-white/60">Try different keywords or refine your search</div>
         </div>
     );
 
     return (
-        <div className="relative min-h-screen flex flex-col overflow-hidden">
-            <AnimatedStyles />
-            
-            {/* Animated background */}
+        <div className="relative min-h-screen flex flex-col">
+            {/* Animated Background */}
+            <div className="fixed inset-0 bg-gradient-to-br from-blue-950 via-indigo-900 to-blue-900 -z-20" />
+
+            {/* Animated nodes background */}
             <div className="fixed inset-0 -z-10">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 animate-gradient-slow"></div>
-                <div className="absolute inset-0 opacity-30">
-                    <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl animate-blob"></div>
-                    <div className="absolute top-0 -right-4 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-2000"></div>
-                    <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl animate-blob animation-delay-4000"></div>
-                </div>
-            </div>
-
-            {/* Navbar */}
-            <div className="fixed top-0 left-0 w-full bg-blue-premier text-sm py-3 shadow z-10">
-                <div className="w-full px-4 md:px-6 lg:px-8">
-                    <div className="flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row items-center w-full gap-4">
-                            <a
-                                className="flex items-center gap-x-2 text-xl font-semibold text-white focus:outline-none focus:opacity-80"
-                                href="/home"
-                                aria-label="Brand"
-                            >
-                                <img src="src/assets/logo.png" alt="Logo" className="w-11 h-10 mr-1" />
-                                <div className="grid grid-rows-2 grid-flow-col gap-0">
-                                    <div className="text-lg md:text-xl italic font-bold">BADAN PUSAT STATISTIK</div>
-                                    <div className="text-sm md:text-base italic font-bold">PROVINSI SUMATERA BARAT</div>
-                                </div>
-                            </a>
-
-                            <div className="w-full md:w-96 lg:w-[500px]">
-                                <SearchBar search={search} setSearch={setSearch} onSearch={handleSearch} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <svg className="w-full h-full opacity-30">
+                    {Array.from({ length: 20 }).map((_, i) => (
+                        <motion.circle
+                            key={i}
+                            cx={`${Math.random() * 100}%`}
+                            cy={`${Math.random() * 100}%`}
+                            r="2"
+                            fill="#fff"
+                            animate={{
+                                opacity: [0.3, 0.8, 0.3],
+                                scale: [1, 1.2, 1],
+                            }}
+                            transition={{
+                                duration: 3,
+                                repeat: Infinity,
+                                delay: i * 0.2,
+                            }}
+                        />
+                    ))}
+                </svg>
             </div>
 
             {/* Main Content */}
-            <div className="min-h-screen flex justify-center items-start py-6 md:py-10 px-4 mt-32 md:mt-20 relative z-0">
-                <div className="w-full max-w-5xl">
+            <div className="flex-grow flex flex-col items-center pt-6 px-4">
+                {/* Search Bar Section */}
+                <div className="w-full flex flex-col md:flex-row items-center justify-between px-4 py-4 md:py-2 max-w-4xl mb-6">
+                    {/* Logo */}
+                    <div
+                        className="flex-shrink-0 cursor-pointer mb-4 md:mb-0"
+                        onClick={() => navigate('/')}
+                    >
+                        <Logo size="small" />
+                    </div>
+
+                    {/* Search Bar */}
+                    <div className="w-full md:w-[800px] z-20">
+                        <SearchBar
+                            search={search}
+                            setSearch={setSearch}
+                            onSearch={handleSearch}
+                        />
+                    </div>
+                </div>
+
+                {/* Results Section */}
+                <div className="w-full max-w-4xl">
                     {isLoading ? (
                         <LoadingSpinner />
                     ) : error ? (
@@ -199,15 +187,18 @@ const Result = () => {
                     ) : data.length === 0 ? (
                         <NoResults />
                     ) : (
-                        <div className="space-y-6">
+                        <motion.div
+                            className="space-y-4"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.5 }}
+                        >
                             {data.map((item, index) => (
-                                <div
+                                <motion.div
                                     key={`${item.id}-${index}`}
-                                    className="transform transition-all duration-500"
-                                    style={{
-                                        opacity: 0,
-                                        animation: `fadeIn 0.5s ease-out ${index * 0.1}s forwards`
-                                    }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
                                 >
                                     <CardResultSearch
                                         id={item.id.toString()}
@@ -217,19 +208,16 @@ const Result = () => {
                                         url={item.url}
                                         updatedAt={new Date(item.updatedAt).toLocaleString()}
                                         email={item.pembuat?.email || "Email tidak tersedia"}
+                                        kategori={item.kategori}
                                     />
-                                </div>
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     )}
-                </div>
-            </div>
 
-            {/* Footer and Sidebar */}
-            <div className="relative z-10">
-                <Sidebar role={role} />
-                {!isLoading && !error && data.length > 0 && (
-                        <div className="mb-7 flex justify-center">
+                    {/* Pagination */}
+                    {!isLoading && !error && data.length > 0 && (
+                        <div className="mt-8 mb-6 flex justify-center">
                             <Pagination
                                 currentPage={pageInfo.currentPage}
                                 totalPages={pageInfo.totalPages}
@@ -237,8 +225,15 @@ const Result = () => {
                             />
                         </div>
                     )}
-                <Footer />
+                </div>
+            </div>
+
+            {/* Footer and other components */}
+            <div className="relative z-10">
+                <Feedback />
                 <ScrollButton />
+                <Sidebar role={role} />
+                <Footer />
             </div>
         </div>
     );

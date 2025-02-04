@@ -12,6 +12,10 @@ import ExpandableText from "../components/ExpandableText";
 import Pagination from "../components/Pagination";
 import ManajemenLinkPopup from "../components/ManajemenLinkPopup";
 import useRole from "../hooks/useRole";
+import { klikLink } from '../services/pencarianLink.service';
+import SelectKategori from "../components/SelectKategori";
+import { motion } from 'framer-motion';
+
 
 const ManajemenLink = () => {
     const role = useRole();
@@ -36,7 +40,26 @@ const ManajemenLink = () => {
         file: null,
         gambar: "",
         visibilitas: "public",
+        kategori: "",
     });
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: { duration: 0.5 }
+        }
+    };
+
+    const tableVariants = {
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+            opacity: 1,
+            y: 0,
+            transition: { duration: 0.5, delay: 0.2 }
+        }
+    };
+    const [selectedKategori, setSelectedKategori] = useState(""); // Tambah state untuk kategori
+    const kategoriOptions = ["", "IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
 
     const fetchLinks = useCallback(async () => {
         setIsLoading(true);
@@ -45,7 +68,8 @@ const ManajemenLink = () => {
             const response = await listLink({
                 page: pageInfo.currentPage,
                 limit: pageInfo.limit,
-                search
+                search,
+                kategori: selectedKategori
             });
             setLinks(response.data);
             setPageInfo(prev => ({
@@ -62,7 +86,7 @@ const ManajemenLink = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [pageInfo.currentPage, pageInfo.limit, search]);
+    }, [pageInfo.currentPage, pageInfo.limit, search, selectedKategori]);
 
     useEffect(() => {
         fetchLinks();
@@ -120,6 +144,7 @@ const ManajemenLink = () => {
             form.append("url", formData.url);
             form.append("deskripsi", formData.deskripsi || "");
             form.append("visibilitas", formData.visibilitas);
+            form.append("kategori", formData.kategori);
             form.append("sharedWith[]", "");
 
             if (formData.file instanceof File) {
@@ -214,6 +239,7 @@ const ManajemenLink = () => {
             file: null,
             gambar: website.gambar ? `${API_URL}${website.gambar}` : "",
             visibilitas: website.visibilitas.toLowerCase(),
+            kategori: website.kategori,
         });
         setIsOpen(true);
     };
@@ -230,7 +256,7 @@ const ManajemenLink = () => {
             form.append("url", formData.url);
             form.append("deskripsi", formData.deskripsi || "");
             form.append("visibilitas", formData.visibilitas);
-            // Append selectedUsers jika visibility private
+            form.append("kategori", formData.kategori);
             selectedUsers.forEach(userId => {
                 form.append("sharedWith[]", userId);
             })
@@ -262,187 +288,196 @@ const ManajemenLink = () => {
         }
     };
 
-
+    const handleClick = async (id, url) => {
+        try {
+            await klikLink(id);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } catch (error) {
+            console.error('Error recording link click:', error);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+    }
 
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="min-h-screen bg-gradient-to-br from-blue-900 to-purple-900">
             <Navbar />
-            <div className="flex flex-grow bg-white-100 mt-20">
-                <div className="flex-grow min-w-[1400px] bg-white mt-1 p-4 mb-[6.2rem] rounded-lg">
-                    <div className="w-[1200px] mx-auto">
-                        <div className="bg-white shadow rounded-lg">
-                            <div className="p-4">
-                                {/* Header section */}
-                                <div className="mb-8 flex justify-between items-center">
-                                    <div className="teFxt-xl font-semibold text-gray-700">
-                                        List Link
-                                    </div>
-                                    <div className="w-72">
-                                        <SearchBox
-                                            value={search}
-                                            onChange={handleSearch}
-                                        />
-                                    </div>
+            <div className="flex flex-1 pt-20">
+                <motion.div
+                    className="flex-1 p-6 mx-auto max-w-7xl"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                >
+                    <div className="backdrop-blur-xl bg-white/10 rounded-xl shadow-xl border border-white/20 p-6">
+                        <div className="flex flex-col space-y-6">
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                                <h2 className="text-2xl font-bold text-white">List Link</h2>
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+                                    <SelectKategori
+                                        name="filterKategori"
+                                        value={selectedKategori}
+                                        onChange={(e) => {
+                                            setSelectedKategori(e.target.value);
+                                            setPageInfo(prev => ({
+                                                ...prev,
+                                                currentPage: 1
+                                            }));
+                                        }}
+                                        options={kategoriOptions}
+                                        placeholder="Semua Kategori"
+                                        className="w-full sm:w-48"
+                                    />
+                                    <SearchBox
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value);
+                                            setPageInfo(prev => ({
+                                                ...prev,
+                                                currentPage: 1
+                                            }));
+                                        }}
+                                        className="w-full sm:w-72"
+                                    />
                                     <ButtonGreen
-                                        onClick={togglePopup}
+                                        onClick={() => {
+                                            setIsEditing(false);
+                                            setFormData({
+                                                id: "",
+                                                judul: "",
+                                                url: "",
+                                                deskripsi: "",
+                                                file: null,
+                                                gambar: "",
+                                                visibilitas: "public",
+                                                kategori: "",
+                                            });
+                                            setIsOpen(true);
+                                        }}
                                         variant="green"
-                                        label="Tambah Link"
-                                        name="tambah-link"
-                                        disabled={isLoading}
+                                        className="rounded-[1.1rem]"
                                     >
-                                        <Plus className="font-medium" size={15} />
+                                        <Plus size={20} />
                                     </ButtonGreen>
                                 </div>
+                            </div>
 
-                                {/* Error Message */}
-                                {errorMessage && (
-                                    <div className="mb-4 p-4 bg-red-100 text-red-700 rounded-lg">
-                                        {errorMessage}
-                                    </div>
-                                )}
-
-                                {/* Loading State */}
-                                {isLoading ? (
-                                    <div className="flex justify-center items-center py-8">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-500 border-t-transparent"></div>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-hidden">
-                                        <table className="w-full table-fixed border-collapse">
-                                            <thead>
-                                                <tr className="bg-blue-premier">
-                                                    <th className="w-36 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        Judul
-                                                    </th>
-                                                    <th className="w-64 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        URL
-                                                    </th>
-                                                    <th className="w-72 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        Deskripsi
-                                                    </th>
-                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        Visibilitas
-                                                    </th>
-                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        File
-                                                    </th>
-                                                    <th className="w-32 px-6 py-3 text-center text-xs font-medium text-white uppercase">
-                                                        Aksi
-                                                    </th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-200">
-                                                {links.map((website, index) => (
-                                                    <tr key={index} className="hover:bg-gray-100">
-                                                        <td className="w-48 px-6 py-4 text-center text-gray-800">
-                                                            <div className="truncate">
-                                                                <HighlightText text={website.judul} highlight={search} />
+                            <motion.div
+                                className="overflow-x-auto"
+                                variants={tableVariants}
+                            >
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr className="bg-blue-600/30 backdrop-blur-sm">
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                Judul
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                URL
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                Kategori
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                Deskripsi
+                                            </th>
+                                            <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                                Visibilitas
+                                            </th>
+                                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                                                File
+                                            </th>
+                                            <th className="px-6 py-3 text-center text-xs font-medium text-white uppercase tracking-wider">
+                                                Aksi
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-white/10">
+                                        {links.map((link, index) => (
+                                            <tr key={index} className="hover:bg-white/5">
+                                                <td className="px-6 py-3 whitespace-nowrap text-white">
+                                                    <HighlightText text={link.judul} highlight={search} />
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap text-white">
+                                                    <a
+                                                        href="#"
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            handleClick(link.id, link.url);
+                                                        }}
+                                                        className="text-blue-300 hover:text-blue-200 underline"
+                                                    >
+                                                        <HighlightText text={link.url} highlight={search} />
+                                                    </a>
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap text-white">
+                                                    {link.kategori || "-"}
+                                                </td>
+                                                <td className="px-6 py-3 text-white">
+                                                    <ExpandableText text={link.deskripsi} maxLength={50} />
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap">
+                                                    <span className={`px-2 py-1 text-sm font-medium rounded-full ${
+                                                        link.visibilitas === 'public' 
+                                                            ? 'bg-emerald-400 text-emerald-800'
+                                                            : 'bg-yellow-100 text-yellow-800'
+                                                    }`}>
+                                                        {link.visibilitas}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-3">
+                                                    <div className="flex justify-center">
+                                                        {link.gambar ? (
+                                                            <div className="w-12 h-12 rounded-lg overflow-hidden">
+                                                                <img
+                                                                    src={`${API_URL}${link.gambar}`}
+                                                                    alt={link.judul}
+                                                                    className="w-full h-full object-cover"
+                                                                />
                                                             </div>
-                                                        </td>
-                                                        <td className="w-64 px-6 py-4 text-center text-gray-800">
-                                                            <div className="truncate">
-                                                                <a
-                                                                    href={website.url}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="text-blue-500 underline hover:text-blue-700"
-                                                                >
-                                                                    {website.url}
-                                                                </a>
-                                                            </div>
-                                                        </td>
-                                                        <td className="w-64 px-6 py-4 text-gray-800">
-                                                            <div className="w-full">
-                                                                <ExpandableText text={website.deskripsi} maxLength={50} />
-                                                            </div>
-                                                        </td>
-                                                        <td className="w-32 px-6 py-4 text-center text-gray-800">
-                                                            {website.visibilitas}
-                                                        </td>
-                                                        <td className="w-32 px-6 py-4">
-                                                            <div className="flex justify-center items-center">
-                                                                {website.gambar ? (
-                                                                    <div className="w-16 h-16 overflow-hidden flex-shrink-0">
-                                                                        <img
-                                                                            src={`${API_URL}${website.gambar}`}
-                                                                            alt={website.judul}
-                                                                            className="w-16 h-16 object-cover"
-                                                                        />
-                                                                    </div>
-                                                                ) : (
-                                                                    <span className="text-gray-500">
-                                                                        Tidak ada gambar
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="w-32 px-6 py-4">
-                                                            <div className="flex justify-center items-center gap-4">
-                                                                <button
-                                                                    type="button"
-                                                                    name="hapus-link"
-                                                                    onClick={() => handleDelete(website.id, website.url)}
-                                                                    className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
-                                                                >
-                                                                    <Trash2
-                                                                        size={20}
-                                                                        color="red"
-                                                                        className="rounded transition-transform duration-300 transform hover:-translate-y-1"
-                                                                    />
-                                                                </button>
-                                                                <button
-                                                                    type="button"
-                                                                    name="edit-link"
-                                                                    onClick={() => handleEdit(website)}
-                                                                    className="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800"
-                                                                >
-                                                                    <Pencil
-                                                                        size={20}
-                                                                        color="orange"
-                                                                        className="rounded transition-transform duration-300 transform hover:-translate-y-1"
-                                                                    />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
+                                                        ) : (
+                                                            <span className="text-white/60">-</span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-3 whitespace-nowrap text-center">
+                                                    <div className="flex justify-center space-x-2">
+                                                        <button
+                                                            onClick={() => handleDelete(link.id, link.judul)}
+                                                            className="p-2 hover:bg-red-500/20 rounded-full transition-colors"
+                                                        >
+                                                            <Trash2 size={20} className="text-red-400" />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleEdit(link)}
+                                                            className="p-2 hover:bg-orange-500/20 rounded-full transition-colors"
+                                                        >
+                                                            <Pencil size={20} className="text-orange-400" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </motion.div>
+                            <div className="mt-4 flex justify-end">
+                                <Pagination
+                                    currentPage={pageInfo.currentPage}
+                                    totalPages={pageInfo.totalPages}
+                                    onPageChange={handlePageChange}
+                                    className="text-white"
+                                />
                             </div>
                         </div>
-                        {!isLoading && (
-                            <div className="sticky bottom-0 bg-white mt-4 pb-4">
-                                <div className="flex justify-end">
-                                    <div className="w-auto">
-                                        <Pagination
-                                            currentPage={pageInfo.currentPage}
-                                            totalPages={pageInfo.totalPages}
-                                            onPageChange={handlePageChange}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
                     </div>
-                </div>
+                </motion.div>
                 <Sidebar role={role} />
             </div>
 
-            {/* Footer */}
-            <div className="fixed bottom-0 w-full min-w-[1400px] bg-white">
-                <div className="w-[1200px] mx-auto">
-                    <Footer />
-                </div>
-            </div>
-
-            {/* Popup */}
             {isOpen && (
                 <ManajemenLinkPopup
                     isOpen={isOpen}
-                    togglePopup={togglePopup}
+                    togglePopup={() => setIsOpen(false)}
                     isEditing={isEditing}
                     formData={formData}
                     handleChange={handleChange}
@@ -453,6 +488,10 @@ const ManajemenLink = () => {
                     isLoading={isLoading}
                 />
             )}
+            
+            <div className="absolute bottom-0 w-full">
+                <Footer className="text-white mt-8" />
+            </div>
         </div>
     );
 
