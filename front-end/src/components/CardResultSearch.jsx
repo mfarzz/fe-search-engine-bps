@@ -2,20 +2,18 @@ import { memo, useState } from "react";
 import PropTypes from 'prop-types';
 import { API_URL, klikLink } from "../services/pencarianLink.service";
 import defaultImage from '../assets/default.jpg';
+import { motion, AnimatePresence } from "framer-motion";
 
-const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, email }) => {
+const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, email, kategori }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const handleClick = async (e) => {
-        if (e.target.closest('.expand-btn')) {
-            e.preventDefault();
-            return;
-        }
-
         try {
-            e.preventDefault();
-            await klikLink(id);
-            window.open(url, '_blank', 'noopener,noreferrer');
+            if (!e.target.closest('.expand-btn') && !e.target.closest('.description-text')) {
+                e.preventDefault();
+                await klikLink(id);
+                window.open(url, '_blank', 'noopener,noreferrer');
+            }
         } catch (error) {
             console.error('Error recording link click:', error);
             window.open(url, '_blank', 'noopener,noreferrer');
@@ -28,117 +26,126 @@ const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, e
     };
 
     return (
-        <div className="transform transition-all duration-300 hover:scale-[1.02]">
+        <motion.div
+            layout
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+            className="w-full"
+        >
             <div 
                 onClick={handleClick}
-                className={`group max-w-5xl bg-white rounded-3xl shadow-lg hover:shadow-xl 
-                    transition-all duration-500 overflow-hidden relative
-                    ${isExpanded ? 'h-auto min-h-[210px]' : 'h-[210px]'}`}
+                className="group backdrop-blur-md bg-white/10 rounded-xl border border-white/20
+                         hover:bg-white/20 transition-all duration-300 overflow-hidden
+                         shadow-lg hover:shadow-xl cursor-pointer"
             >
-                <div className="flex relative">
+                <div className="flex p-4 gap-4">
+                    {/* Image Section with Category Badge */}
+                    <div className="hidden md:block w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg relative">
+                        <div className="absolute top-2 left-2 z-10">
+                            <span className="px-2 py-1 text-xs font-medium rounded-full 
+                                         bg-cyan-400/20 text-cyan-200 ring-1 ring-cyan-400/30 
+                                         backdrop-blur-sm">
+                                {kategori || 'Uncategorized'}
+                            </span>
+                        </div>
+                        <img
+                            src={gambar ? `${API_URL}${gambar}` : defaultImage}
+                            alt={judul}
+                            className="w-full h-full object-cover transition-transform duration-300
+                                     group-hover:scale-110"
+                        />
+                    </div>
+
                     {/* Content Section */}
-                    <div className={`relative flex-1 p-6 transition-all duration-500 ease-out
-                        ${isExpanded ? 'pr-6' : 'pr-[288px]'}`}>
-                        {/* Title and URL section */}
-                        <div className="mb-4">
-                            <h2 className="text-xl md:text-2xl font-bold mb-2 
-                                bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent
-                                group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
-                                {judul}
-                            </h2>
-                            
-                            <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                        {/* Title, Category (mobile), and URL */}
+                        <div className="mb-2">
+                            <div className="flex items-center gap-2 mb-1">
+                                <h2 className="text-xl font-bold text-white/90 
+                                           group-hover:text-white transition-colors duration-300">
+                                    {judul}
+                                </h2>
+                                {/* Show category badge for mobile */}
+                                <div className="md:hidden">
+                                    <span className="px-2 py-1 text-xs font-medium rounded-full 
+                                                 bg-cyan-400/20 text-cyan-200 ring-1 ring-cyan-400/30">
+                                        {kategori || 'Uncategorized'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 opacity-60 group-hover:opacity-80">
                                 <svg 
-                                    xmlns="http://www.w3.org/2000/svg" 
-                                    className="h-4 w-4 text-blue-500 group-hover:text-purple-500 transition-colors duration-300" 
-                                    fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                    className="w-4 h-4 text-cyan-300" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
                                 >
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
                                         d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
                                     />
                                 </svg>
-                                <span className="text-gray-500 group-hover:text-blue-500 text-sm transition-colors duration-300 truncate">
+                                <span className="text-white/70 text-sm truncate hover:text-white/90">
                                     {url}
                                 </span>
                             </div>
                         </div>
 
-                        {/* Description section */}
-                        <div className="relative">
-                            <div className={`text-gray-600 text-base transition-all duration-500 ease-out pe-20
-                                ${isExpanded ? '' : 'line-clamp-1'}`}>
-                                {deskripsi}
-                            </div>
+                        {/* Description with proper padding */}
+                        <div className="relative description-text mb-6">
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={isExpanded ? 'expanded' : 'collapsed'}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                    className={`text-white/60 text-sm pr-24 ${isExpanded ? '' : 'line-clamp-2'}`}
+                                >
+                                    {deskripsi}
+                                </motion.div>
+                            </AnimatePresence>
+                            <button
+                                onClick={toggleExpand}
+                                className="expand-btn absolute bottom-0 right-0 text-cyan-300 hover:text-cyan-200 
+                                         text-sm font-medium bg-gradient-to-l 
+                                         to-transparent pl-4 py-0.5"
+                            >
+                                {isExpanded ? 'Show less' : 'Show more'}
+                            </button>
                         </div>
 
-                        {/* Metadata Section */}
-                        <div className={`mt-4 transition-all duration-500 ease-out transform
-                            ${isExpanded ? 'translate-y-full opacity-0' : 'translate-y-0 opacity-100'}`}>
-                            <div className="border-t border-gray-100 pt-4">
-                                <div className="flex flex-col md:flex-row md:justify-between space-y-2 md:space-y-0">
-                                    <div className="flex items-center space-x-2">
-                                        <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 
-                                            flex items-center justify-center text-white text-sm">
-                                            {email[0].toUpperCase()}
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-sm text-gray-600">Created by</span>
-                                            <span className="text-sm font-medium text-gray-800">{email}</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center text-sm text-gray-500">
-                                        <svg 
-                                            xmlns="http://www.w3.org/2000/svg" 
-                                            className="h-4 w-4 mr-1" 
-                                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
-                                            />
-                                        </svg>
-                                        {updatedAt}
-                                    </div>
+                        {/* Metadata */}
+                        <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500 
+                                             flex items-center justify-center text-white text-sm">
+                                    {email[0].toUpperCase()}
+                                </div>
+                                <div className="text-xs">
+                                    <span className="text-white/50">Created by </span>
+                                    <span className="text-white/70">{email}</span>
                                 </div>
                             </div>
+                            <div className="flex items-center text-xs text-white/50">
+                                <svg 
+                                    className="w-4 h-4 mr-1 text-cyan-300/50" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                                    />
+                                </svg>
+                                {updatedAt}
+                            </div>
                         </div>
-                    </div>
-
-                    {/* See More/Less Button */}
-                    <button
-                        onClick={toggleExpand}
-                        className={`expand-btn absolute text-sm text-blue-500 hover:text-blue-700 font-medium
-                            transition-all duration-300 hover:bg-blue-50 rounded-lg 
-                            flex items-center gap-1 px-2 py-0.5 z-10
-                            ${isExpanded ? 'right-6' : 'right-[272px]'} top-[84px]`}
-                    >
-                        {isExpanded ? 'See Less' : 'See More'}
-                        <svg 
-                            xmlns="http://www.w3.org/2000/svg" 
-                            className="h-4 w-4"
-                            fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                d={isExpanded ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
-                            />
-                        </svg>
-                    </button>
-
-                    {/* Image Section */}
-                    <div className={`absolute top-0 right-0 w-40 md:w-64 h-full transition-all duration-500 ease-out transform
-                        ${isExpanded ? 'translate-x-full' : 'translate-x-0'}`}>
-                        <img
-                            src={gambar ? `${API_URL}${gambar}` : defaultImage}
-                            alt={judul}
-                            className="w-full h-full object-cover
-                                transition-transform duration-700 ease-out group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/10 
-                            group-hover:opacity-0 transition-opacity duration-300" />
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 });
 
@@ -149,7 +156,8 @@ CardResultSearch.propTypes = {
     url: PropTypes.string.isRequired,
     updatedAt: PropTypes.string.isRequired,
     email: PropTypes.string.isRequired,
-    gambar: PropTypes.string
+    gambar: PropTypes.string,
+    kategori: PropTypes.string
 };
 
 CardResultSearch.displayName = 'CardResultSearch';

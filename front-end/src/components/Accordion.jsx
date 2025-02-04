@@ -8,14 +8,14 @@ const Accordion = ({ pertanyaan, jawaban }) => {
     <div className={`transition-all duration-300 ${isOpen ? "mt-4" : "mt-2"}`}>
       <div className={`hs-accordion ${isOpen ? "bg-blue" : ""} rounded-xl p-6`}>
         <button
-          className="hs-accordion-toggle group pb-3 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-gray-800 rounded-lg transition hover:text-blue-premier hover:translate-y-[-2px] focus:outline-none focus:text-gray-500"
+          className="hs-accordion-toggle group pb-3 inline-flex items-center justify-between gap-x-3 w-full md:text-lg font-semibold text-start text-white/60 rounded-lg transition hover:text-white hover:translate-y-[-2px] focus:outline-none"
           aria-expanded={isOpen}
           onClick={toggleAccordion}
         >
           {pertanyaan}
           {isOpen ? (
             <svg
-              className="shrink-0 size-5 text-gray-600 group-hover:text-gray-500"
+              className="shrink-0 size-5 text-white focus:text-white"
               xmlns="http://www.w3.org/2000/svg"
               width="24"
               height="24"
@@ -30,7 +30,7 @@ const Accordion = ({ pertanyaan, jawaban }) => {
             </svg>
           ) : (
             <svg
-              className="shrink-0 size-5 text-gray-600 group-hover:text-gray-500"
+              className="shrink-0 size-5 text-white group-hover:text-gray-500"
               xmlns="http://www.w3.org/2000/svg"
               width="24"
               height="24"
@@ -49,7 +49,7 @@ const Accordion = ({ pertanyaan, jawaban }) => {
           className={`hs-accordion-content overflow-hidden transition-[height] duration-300 ${isOpen ? "max-h-screen" : "max-h-0"}`}
           role="region"
         >
-          <p className="text-gray-800">{jawaban}</p>
+          <p className="text-white/70">{jawaban}</p>
         </div>
       </div>
     </div>

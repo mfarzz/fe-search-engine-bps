@@ -53,13 +53,14 @@ axiosInstance.interceptors.request.use(
  * @returns {Promise<Object>} - The response data from the API.
  */
 
-export const listLink = async ({page = 1, limit =10, search = ''}) => {
+export const listLink = async ({page = 1, limit =10, search = '', kategori = ''}) => {
     try {
         const result = await axiosInstance.get(`/list-link`, {
             params: {
                 page,
                 limit,
                 search,
+                kategori,
             },
         });
         return result.data;
@@ -70,11 +71,12 @@ export const listLink = async ({page = 1, limit =10, search = ''}) => {
     }
 }
 
-export const allUser = async ({search=''}) => {
+export const allUser = async ({search = '', unit = ''}) => {
     try {
         const result = await axiosInstance.get(`/all-user`,{
             params: {
                 search,
+                unit
             },
         });
         return result.data;

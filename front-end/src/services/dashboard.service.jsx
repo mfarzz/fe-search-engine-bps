@@ -23,19 +23,31 @@ axiosInstance.interceptors.request.use(
     }
 );
 
-export const seringDikunjungi = async () => {
+export const hourlyVisitors = async () => {
     try {
-        const result = await axiosInstance.get(`/most-visited`, {});
+        const result = await axiosInstance.get(`/hourly`, {});
         return result.data;
-    } catch (error) {
+    }
+    catch (error) {
         console.error(error);
         throw error;
     }
 }
 
-export const terakhirDikunjungi = async () => {
+export const dailyVisitors = async () => {
     try {
-        const result = await axiosInstance.get(`/last-visited`, {});
+        const result = await axiosInstance.get(`/daily`, {});
+        return result.data;
+    }
+    catch (error) {
+        console.error(error);
+        throw error;
+    }
+}
+
+export const summaryVisitors = async () => {
+    try {
+        const result = await axiosInstance.get(`/summary`, {});
         return result.data;
     }
     catch (error) {
