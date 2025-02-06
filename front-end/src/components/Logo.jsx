@@ -25,8 +25,8 @@ const Logo = ({ size = 'large' }) => {
     const currentSize = sizes[size];
 
     return (
-        <div className={`flex items-center justify-center ${currentSize.container}`}>
-            <motion.div
+        <div className={`flex items-center justify-center z-40 ${currentSize.container}`}>
+            <motion.a
                 animate={{ 
                     rotate: 360 
                 }}
@@ -36,6 +36,7 @@ const Logo = ({ size = 'large' }) => {
                     ease: "linear"
                 }}
                 className="relative"
+                href="/home"
                 onClick={handleClicked}
             >
                 <img 
@@ -45,15 +46,15 @@ const Logo = ({ size = 'large' }) => {
                 />
                 {/* Glow effect behind the logo */}
                 <div className="absolute inset-0 bg-cyan-400 opacity-20 blur-xl rounded-full -z-10" />
-            </motion.div>
-            <h1 className={`${currentSize.text} font-bold`}>
+            </motion.a>
+            <a href="/home" className={`${currentSize.text} font-bold`}>
                 <span className="bg-gradient-to-r from-cyan-200 via-cyan-300 to-blue-200 
                                bg-clip-text text-transparent 
                                drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]
                                filter backdrop-brightness-150">
                     Linkfy
                 </span>
-            </h1>
+            </a>
         </div>
     );
 };
