@@ -169,7 +169,7 @@ const Result = () => {
                     </div>
 
                     {/* Search Bar */}
-                    <div className="w-full md:w-[800px] z-20">
+                    <div className="w-full md:w-[800px] z-10">
                         <SearchBar
                             search={search}
                             setSearch={setSearch}
