@@ -69,7 +69,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
 
                 <div className="relative h-3/4">
                     <img
-                        src={gambar ? `${API_URL}${gambar}` : '/default-image.jpg'}
+                        src={gambar ? `${API_URL}${gambar}` : '/default.jpg'}
                         alt={judul}
                         className="w-full h-full object-cover"
                     />
@@ -107,7 +107,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                     <CategoryBadge kategori={kategori} />
                 </div>
                 <img
-                    src={gambar ? `${API_URL}${gambar}` : '/default-image.jpg'}
+                    src={gambar ? `${API_URL}${gambar}` : '/default.jpg'}
                     alt={judul}
                     className="w-full h-full object-cover"
                 />

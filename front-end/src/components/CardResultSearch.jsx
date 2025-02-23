@@ -1,7 +1,7 @@
 import { memo, useState } from "react";
 import PropTypes from 'prop-types';
 import { API_URL, klikLink } from "../services/pencarianLink.service";
-import defaultImage from '../assets/default.jpg';
+import defaultImage from '/default.jpg';
 import { motion, AnimatePresence } from "framer-motion";
 
 const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, email, kategori }) => {

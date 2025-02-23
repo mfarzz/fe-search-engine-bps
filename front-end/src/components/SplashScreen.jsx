@@ -73,7 +73,7 @@ const SplashScreen = () => {
                     className="w-full h-full relative"
                 >
                     <img
-                        src="src/assets/linkfy.png"
+                        src="/linkfy.png"
                         alt="Linkfy Logo"
                         className="w-full h-full brightness-150 contrast-125 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                     />

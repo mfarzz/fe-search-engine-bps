@@ -12,7 +12,7 @@ const Footer = () => {
           </a>
         </div>
         <div className="">
-          <p className="text-gray-500">Tim Pengelolaan & IT</p>
+          <p className="text-gray-500">Tim Pengelolaan & TI</p>
         </div>
       </div>
     </footer>

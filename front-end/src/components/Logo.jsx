@@ -40,7 +40,7 @@ const Logo = ({ size = 'large' }) => {
                 onClick={handleClicked}
             >
                 <img 
-                    src="src/assets/linkfy.png" 
+                    src="/linkfy.png" 
                     alt="Linkfy Logo" 
                     className={`${currentSize.image} brightness-150 contrast-125 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]`}
                 />
