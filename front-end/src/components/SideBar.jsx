@@ -172,7 +172,7 @@ const Sidebar = ({ role }) => {
                                 }}
                             >
                                 <img
-                                    src="src/assets/linkfy.png"
+                                    src="/linkfy.png"
                                     alt="Logo Linkfy"
                                     className="w-full h-auto brightness-150 contrast-125 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                                 />

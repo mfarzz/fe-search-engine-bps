@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from "prop-types";
 import { API_URL } from "../services/riwayatLink.service";
-import defautlImage from '../assets/default.jpg';
+import defautlImage from '/default.jpg';
 import { klikLink } from "../services/pencarianLink.service";
 
 const AppIconGrid = ({ id, judul, gambar, url }) => {

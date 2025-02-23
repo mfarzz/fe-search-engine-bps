@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { login, getGoogleAuthUrl } from '../services/auth.service';
-import { Mail, LogIn, EyeOff, Eye } from 'lucide-react';
+import { Mail, LogIn, EyeOff, Eye, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const AnimatedBackground = () => {
@@ -111,9 +111,28 @@ const Login = () => {
         }
     };
 
+    const handleHomeClick = () => {
+        navigate('/home');
+    };
+
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-6">
+        <div className="relative min-h-screen flex flex-col items-center justify-center p-6">
             <AnimatedBackground />
+
+            {/* Home Button - Now positioned above the login card */}
+            <motion.button
+                onClick={handleHomeClick}
+                className="fixed top-6 right-6 z-20 flex items-center gap-2 px-4 py-2 
+                         bg-white/10 backdrop-blur-md rounded-lg border border-white/20
+                         text-white hover:bg-white/20 focus:outline-none focus:ring-2 
+                         focus:ring-cyan-400 focus:ring-offset-2 transition-all"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+                <Home size={18} />
+                <span className="text-sm font-medium">Ke Halaman Utama</span>
+            </motion.button>
 
             <motion.div
                 className="w-full max-w-md z-10"
@@ -136,7 +155,7 @@ const Login = () => {
                     >
                         <div className="relative w-12 h-12">
                             <img
-                                src="src/assets/linkfy.png"
+                                src="/linkfy.png"
                                 alt="Linkfy Logo"
                                 className="w-full h-full brightness-150 contrast-125 drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]"
                             />
@@ -182,18 +201,24 @@ const Login = () => {
 
                         {/* Password Input */}
                         <div className="relative">
+                            <label className="text-sm font-medium text-white flex items-center gap-2 mb-2">
+                                Password
+                            </label>
                             <input
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 type={showPassword ? "text" : "password"}
-                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all placeholder-gray-400"
+                                className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white 
+                                         focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all 
+                                         placeholder-gray-400"
                                 placeholder="Masukkan password Anda"
                                 required
                             />
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                className="absolute right-3 top-[60%] transform -translate-y-1/2 text-gray-400 
+                                         hover:text-white transition-colors"
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
@@ -202,9 +227,10 @@ const Login = () => {
                         {/* Login Button */}
                         <button
                             type="submit"
-                            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white py-3 px-4 rounded-lg 
-                                     font-medium hover:from-cyan-500 hover:to-blue-600 focus:outline-none focus:ring-2 
-                                     focus:ring-cyan-400 focus:ring-offset-2 transition-all flex items-center justify-center gap-2"
+                            className="w-full bg-gradient-to-r from-cyan-400 to-blue-500 text-white py-3 px-4 
+                                     rounded-lg font-medium hover:from-cyan-500 hover:to-blue-600 
+                                     focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 
+                                     transition-all flex items-center justify-center gap-2"
                         >
                             <LogIn size={18} />
                             Masuk
@@ -224,9 +250,10 @@ const Login = () => {
                     {/* Google Login Button */}
                     <button
                         onClick={handleGoogleLogin}
-                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 border border-white/10 
-                                 rounded-lg text-white hover:bg-white/10 focus:outline-none focus:ring-2 
-                                 focus:ring-cyan-400 focus:ring-offset-2 transition-all"
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white/5 
+                                 border border-white/10 rounded-lg text-white hover:bg-white/10 
+                                 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 
+                                 transition-all"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
                             <path
@@ -254,4 +281,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default Login

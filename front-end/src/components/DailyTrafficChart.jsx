@@ -226,9 +226,9 @@ DailyTrafficChart.propTypes = {
         count: PropTypes.number.isRequired
     })),
     topLinkDaily: PropTypes.arrayOf(PropTypes.shape({
-        day: PropTypes.string.isRequired,
-        click_count: PropTypes.number.isRequired,
-        links: PropTypes.array.isRequired
+        day: PropTypes.string,
+        click_count: PropTypes.number,
+        links: PropTypes.array
     }))
 };
 
