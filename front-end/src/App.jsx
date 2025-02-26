@@ -13,9 +13,7 @@ import ManajemenUser from "./pages/manajemenUser"
 import Layanan from "./pages/layanan"
 import GoogleCallback from './components/GoogleCallback';
 
-function App() {
-  const publicPages = ["home", "faq", "search", "layanan"];
-  
+function App() {  
   return (
     <Router>
       <Routes>

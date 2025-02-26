@@ -1,6 +1,7 @@
 import axios from "axios";
 
-export const API_URL = "https://search-engine-production-1b02.up.railway.app/";
+// export const API_URL = "https://search-engine-production-1b02.up.railway.app/";
+export const API_URL = "https://linkfy-be-production-081e.up.railway.app"
 
 const axiosInstance = axios.create({
     baseURL: API_URL,

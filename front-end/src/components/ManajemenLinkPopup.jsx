@@ -126,7 +126,6 @@ function ManajemenLinkPopup({
 
     const handleLocalFileChange = async (e) => {
         const file = e.target.files?.[0];
-        console.log(file);
         if (!file) {
             // Jika tidak ada file, reset preview
             handleChange({
