@@ -1,8 +1,9 @@
 import { memo, useState } from "react";
 import PropTypes from 'prop-types';
-import { API_URL, klikLink } from "../services/pencarianLink.service";
+import { klikLink } from "../services/pencarianLink.service";
 import defaultImage from '/default.jpg';
 import { motion, AnimatePresence } from "framer-motion";
+import { API_GAMBAR } from "../services/gambar.service";
 
 const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, email, kategori }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -34,7 +35,7 @@ const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, e
             transition={{ duration: 0.3 }}
             className="w-full"
         >
-            <div 
+            <div
                 onClick={handleClick}
                 className="group backdrop-blur-md bg-white/10 rounded-xl border border-white/20
                          hover:bg-white/20 transition-all duration-300 overflow-hidden
@@ -45,13 +46,13 @@ const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, e
                     <div className="hidden md:block w-32 h-32 flex-shrink-0 overflow-hidden rounded-lg relative">
                         <div className="absolute top-2 left-2 z-10">
                             <span className="px-2 py-1 text-xs font-medium rounded-full 
-                                         bg-cyan-400/20 text-cyan-200 ring-1 ring-cyan-400/30 
-                                         backdrop-blur-sm">
+                bg-cyan-400/80 text-cyan-950 ring-1 ring-inset ring-cyan-400/30 
+                backdrop-blur-sm">
                                 {kategori || 'Uncategorized'}
                             </span>
                         </div>
                         <img
-                            src={gambar ? `${API_URL}${gambar}` : defaultImage}
+                            src={gambar ? `${API_GAMBAR}${gambar}` : defaultImage}
                             alt={judul}
                             className="w-full h-full object-cover transition-transform duration-300
                                      group-hover:scale-110"
@@ -76,14 +77,14 @@ const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, e
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 opacity-60 group-hover:opacity-80">
-                                <svg 
-                                    className="w-4 h-4 text-cyan-300" 
-                                    fill="none" 
-                                    stroke="currentColor" 
+                                <svg
+                                    className="w-4 h-4 text-cyan-300"
+                                    fill="none"
+                                    stroke="currentColor"
                                     viewBox="0 0 24 24"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" 
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                                     />
                                 </svg>
                                 <span className="text-white/70 text-sm truncate hover:text-white/90">
@@ -129,14 +130,14 @@ const CardResultSearch = memo(({ id, judul, deskripsi, url, gambar, updatedAt, e
                                 </div>
                             </div>
                             <div className="flex items-center text-xs text-white/50">
-                                <svg 
-                                    className="w-4 h-4 mr-1 text-cyan-300/50" 
-                                    fill="none" 
-                                    stroke="currentColor" 
+                                <svg
+                                    className="w-4 h-4 mr-1 text-cyan-300/50"
+                                    fill="none"
+                                    stroke="currentColor"
                                     viewBox="0 0 24 24"
                                 >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" 
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
                                     />
                                 </svg>
                                 {updatedAt}

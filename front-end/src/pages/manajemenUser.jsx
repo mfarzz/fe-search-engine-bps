@@ -22,7 +22,7 @@ import {
 } from "../services/manajemenUser.service";
 
 const roleOptions = ["admin", "user", "umum"];
-const unitOption = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
+const unitOption = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum", "BPS Pusat"];
 
 const ManajemenUser = () => {
     const role = useRole();

@@ -94,7 +94,7 @@ const Layanan = () => {
     const [isLoading, setIsLoading] = useState(false);
     const limit = 12;
     const [selectedCategory, setSelectedCategory] = useState("");
-    const categories = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
+    const categories = ["BPS Pusat", "IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
 
     const fetchCards = async (currentOffset = 0) => {
         try {

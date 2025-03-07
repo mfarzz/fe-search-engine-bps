@@ -6,7 +6,7 @@ import Navbar from "../components/Navbar";
 import ButtonGreen from "../components/Button";
 import SearchBox from "../components/SearchBox";
 import Footer from "../components/Footer";
-import { API_URL, listLink, tambahLink, hapusLink, editLink, allUser } from "../services/manajemenLink.service";
+import { listLink, tambahLink, hapusLink, editLink, allUser } from "../services/manajemenLink.service";
 import HighlightText from "../components/HighlightText";
 import ExpandableText from "../components/ExpandableText";
 import Pagination from "../components/Pagination";
@@ -15,6 +15,7 @@ import useRole from "../hooks/useRole";
 import { klikLink } from '../services/pencarianLink.service';
 import SelectKategori from "../components/SelectKategori";
 import { motion } from 'framer-motion';
+import { API_GAMBAR } from "../services/gambar.service";
 
 
 const ManajemenLink = () => {
@@ -59,7 +60,7 @@ const ManajemenLink = () => {
         }
     };
     const [selectedKategori, setSelectedKategori] = useState(""); // Tambah state untuk kategori
-    const kategoriOptions = ["", "IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
+    const kategoriOptions = ["", "IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum", "BPS Pusat"];
 
     const fetchLinks = useCallback(async () => {
         setIsLoading(true);
@@ -71,7 +72,6 @@ const ManajemenLink = () => {
                 search,
                 kategori: selectedKategori
             });
-            setLinks(response.data);
             setPageInfo(prev => ({
                 ...prev,
                 ...response.pagination
@@ -237,7 +237,7 @@ const ManajemenLink = () => {
             url: website.url,
             deskripsi: website.deskripsi || "",
             file: null,
-            gambar: website.gambar ? `${API_URL}${website.gambar}` : "",
+            gambar: website.gambar ? `${API_GAMBAR}${website.gambar}` : "",
             visibilitas: website.visibilitas.toLowerCase(),
             kategori: website.kategori,
         });
@@ -429,7 +429,7 @@ const ManajemenLink = () => {
                                                         {link.gambar ? (
                                                             <div className="w-12 h-12 rounded-lg overflow-hidden">
                                                                 <img
-                                                                    src={`${API_URL}${link.gambar}`}
+                                                                    src={`${API_GAMBAR}${link.gambar}`}
                                                                     alt={link.judul}
                                                                     className="w-full h-full object-cover"
                                                                 />

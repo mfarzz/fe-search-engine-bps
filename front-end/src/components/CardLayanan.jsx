@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { API_URL, klikLink } from '../services/pencarianLink.service';
+import { klikLink } from '../services/pencarianLink.service';
 import { motion } from 'framer-motion';
+import { API_GAMBAR } from '../services/gambar.service';
 
 const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kategori }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -48,15 +49,16 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
     };
 
     const CategoryBadge = ({ kategori }) => (
-        <span className="px-2 py-1 text-xs font-medium rounded-full bg-cyan-400/20 text-cyan-200 
-                       ring-1 ring-cyan-400/30 backdrop-blur-sm">
+        <span className="px-2 py-1 text-xs font-medium rounded-full 
+                bg-cyan-400/80 text-cyan-950 ring-1 ring-inset ring-cyan-400/30 
+                backdrop-blur-sm">
             {kategori || 'Uncategorized'}
         </span>
     );
 
     if (isMobile) {
         return (
-            <motion.div 
+            <motion.div
                 onClick={handleClick}
                 className="aspect-[4/3] rounded-xl backdrop-blur-md bg-opacity-10
                          transition-all duration-300 overflow-hidden cursor-pointer
@@ -86,7 +88,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                         viewBox="0 0 24 24"
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                 </div>
             </motion.div>
@@ -94,7 +96,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
     }
 
     return (
-        <motion.div 
+        <motion.div
             onClick={handleClick}
             className="aspect-square rounded-xl backdrop-blur-md bg-opacity-10
                      transition-all duration-300 overflow-hidden cursor-pointer
@@ -107,7 +109,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                     <CategoryBadge kategori={kategori} />
                 </div>
                 <img
-                    src={gambar ? `${API_URL}${gambar}` : '/default.jpg'}
+                    src={gambar ? `${API_GAMBAR}${gambar}` : '/default.jpg'}
                     alt={judul}
                     className="w-full h-full object-cover"
                 />
@@ -126,7 +128,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                         viewBox="0 0 24 24"
                     >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                     </svg>
                 </div>
 
@@ -135,7 +137,7 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                         ${isExpanded ? 'max-h-[220px] overflow-y-auto' : 'max-h-[60px] overflow-hidden'}`}>
                         {deskripsi}
                     </div>
-                    
+
                     <button
                         onClick={handleToggle}
                         className="expand-btn absolute bottom-0 left-0 text-cyan-300 hover:text-cyan-200 
@@ -143,16 +145,16 @@ const CardLayanan = ({ id, gambar, judul, link, deskripsi, email, updatedAt, kat
                                  bg-transparent"
                     >
                         {isExpanded ? 'Show Less' : 'Show More'}
-                        <svg 
+                        <svg
                             className="w-4 h-4"
-                            fill="none" 
-                            stroke="currentColor" 
+                            fill="none"
+                            stroke="currentColor"
                             viewBox="0 0 24 24"
                         >
-                            <path 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round" 
-                                strokeWidth={2} 
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
                                 d={isExpanded ? "M5 15l7-7 7 7" : "M19 9l-7 7-7-7"}
                             />
                         </svg>

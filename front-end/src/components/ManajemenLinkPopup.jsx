@@ -15,7 +15,7 @@ import { motion } from "framer-motion";
 import TextArea from "./TextArea";
 
 const visibilitasOptions = ["public", "private"];
-const kategoriOptions = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum"];
+const kategoriOptions = ["IPDS", "Sosial", "Distribusi", "Produksi", "Neraca", "Umum", "BPS Pusat"];
 
 function ManajemenLinkPopup({
     isOpen,

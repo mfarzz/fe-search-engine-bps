@@ -1,0 +1,1 @@
+export const API_GAMBAR = "https://linkfy-be-production-081e.up.railway.app/"
