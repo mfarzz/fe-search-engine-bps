@@ -72,6 +72,7 @@ const ManajemenLink = () => {
                 search,
                 kategori: selectedKategori
             });
+            setLinks(response.data);
             setPageInfo(prev => ({
                 ...prev,
                 ...response.pagination
@@ -394,19 +395,22 @@ const ManajemenLink = () => {
                                     <tbody className="divide-y divide-white/10">
                                         {links.map((link, index) => (
                                             <tr key={index} className="hover:bg-white/5">
-                                                <td className="px-6 py-3 whitespace-nowrap text-white">
-                                                    <HighlightText text={link.judul} highlight={search} />
+                                                <td className="px-6 py-3 whitespace-nowrap text-white max-w-[15rem]">
+                                                    <HighlightText text={link.judul.length > 25 ? link.judul.substring(0, 25) + '...' : link.judul} highlight={search} />
                                                 </td>
-                                                <td className="px-6 py-3 whitespace-nowrap text-white">
+                                                <td className="px-6 py-3 whitespace-nowrap text-white max-w-xs">
                                                     <a
                                                         href="#"
                                                         onClick={(e) => {
                                                             e.preventDefault();
                                                             handleClick(link.id, link.url);
                                                         }}
-                                                        className="text-blue-300 hover:text-blue-200 underline"
+                                                        className="text-blue-300 hover:text-blue-200 underline block overflow-hidden text-ellipsis"
                                                     >
-                                                        <HighlightText text={link.url} highlight={search} />
+                                                        <HighlightText
+                                                            text={link.url.length > 25 ? link.url.substring(0, 25) + '...' : link.url}
+                                                            highlight={search}
+                                                        />
                                                     </a>
                                                 </td>
                                                 <td className="px-6 py-3 whitespace-nowrap text-white">
@@ -416,11 +420,10 @@ const ManajemenLink = () => {
                                                     <ExpandableText text={link.deskripsi} maxLength={50} />
                                                 </td>
                                                 <td className="px-6 py-3 whitespace-nowrap">
-                                                    <span className={`px-2 py-1 text-sm font-medium rounded-full ${
-                                                        link.visibilitas === 'public' 
+                                                    <span className={`px-2 py-1 text-sm font-medium rounded-full ${link.visibilitas === 'public'
                                                             ? 'bg-emerald-400 text-emerald-800'
                                                             : 'bg-yellow-100 text-yellow-800'
-                                                    }`}>
+                                                        }`}>
                                                         {link.visibilitas}
                                                     </span>
                                                 </td>
@@ -473,6 +476,7 @@ const ManajemenLink = () => {
                 </motion.div>
                 <Sidebar role={role} />
             </div>
+                <Footer className="text-white mt-8" />
 
             {isOpen && (
                 <ManajemenLinkPopup
@@ -488,10 +492,6 @@ const ManajemenLink = () => {
                     isLoading={isLoading}
                 />
             )}
-            
-            <div className="absolute bottom-0 w-full">
-                <Footer className="text-white mt-8" />
-            </div>
         </div>
     );
 
